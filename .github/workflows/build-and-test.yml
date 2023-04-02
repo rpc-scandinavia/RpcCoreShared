@@ -9,7 +9,7 @@ on:
     - "**.csproj"
 
 env:
-  DOTNET_VERSION: "7.0.3" # The .NET SDK version to use
+  DOTNET_VERSION: "7.0.200" # The .NET SDK version to use
 
 jobs:
   build-and-test:
@@ -28,10 +28,10 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Install dependencies
-      run: dotnet  restore
+      run: dotnet  restore  RpcCoreShared.csproj
 
     - name: Build
-      run: dotnet  build  --configuration Release  --no-restore
+      run: dotnet  build  --configuration Release  --no-restore  RpcCoreShared.csproj
 
     - name: Test
-      run: dotnet  test  --no-restore  --verbosity normal
+      run: dotnet  test  --no-restore  --verbosity normal  RpcCoreShared.test.csproj
