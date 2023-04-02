@@ -22,17 +22,19 @@
 		<!--  <TestResultsFolderPath>./bin.test/TestResults</TestResultsFolderPath>  -->
 	</PropertyGroup>
 
-	<!-- Import general properties. -->
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-	</PropertyGroup>
-
 	<!-- Import SDK properties here, when moving the "obj" folder. -->
 	<Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
 	<!-- Import general properties. -->
-	<Import Project="../build/targets/General.target" />
-	<Import Project="../build/targets/Reference UnitTest.target" />
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+		<PackageReference Include="MSTest.TestAdapter" Version="3.*" />
+		<PackageReference Include="MSTest.TestFramework" Version="3.*" />
+		<PackageReference Include="coverlet.collector" Version="3.*" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- Reference the project. -->
