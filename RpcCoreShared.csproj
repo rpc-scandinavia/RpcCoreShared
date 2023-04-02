@@ -13,7 +13,9 @@
 	</PropertyGroup>
 
 	<!-- Import general properties. -->
-	<Import Project="../build/targets/General.target" />
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
 
 	<!-- Reference projects. -->
 	<!-- Reference packages. -->

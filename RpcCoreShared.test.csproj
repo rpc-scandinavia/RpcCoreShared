@@ -22,6 +22,11 @@
 		<!--  <TestResultsFolderPath>./bin.test/TestResults</TestResultsFolderPath>  -->
 	</PropertyGroup>
 
+	<!-- Import general properties. -->
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
+
 	<!-- Import SDK properties here, when moving the "obj" folder. -->
 	<Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
