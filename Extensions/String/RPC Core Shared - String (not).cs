@@ -47,7 +47,7 @@ static public partial class RpcCoreExtensions {
 	// NotNullOrEmpty (from String)
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
-	/// Gets the value or the default value if the value is either null ot empty.
+	/// Gets the value or the default value if the value is either null or empty.
 	/// </summary>
 	/// <param name="value">The value to verify.</param>
 	/// <param name="defaultValue">The value to return when the value is either null or empty.</param>
