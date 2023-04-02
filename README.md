@@ -1,3 +1,5 @@
+[![build and test](https://github.com/rpc-scandinavia/RpcCoreShared/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/rpc-scandinavia/RpcCoreShared/actions/workflows/build-and-test.yml)
+
 # RpcCoreShared
 RPC Core Shared contains interfaces and common classes used in most applications from RPC Scandinavia.
 
