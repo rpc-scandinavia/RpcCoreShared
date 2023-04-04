@@ -425,9 +425,9 @@ public static class RpcKeyValueSerializer {
 			return (T)result;
 		} catch {
 			// Throw the exception.
-//			if (options.SerializeThrowExceptions.HasFlag(RpcKeyValueSerializerExceptionOption.ThrowCriticalExceptions) == true) {
+			if (options.SerializeThrowExceptions.HasFlag(RpcKeyValueSerializerExceptionOption.ThrowCriticalExceptions) == true) {
 				throw;
-//			}
+			}
 
 			// Return the object or default.
 			if (obj != null) {
