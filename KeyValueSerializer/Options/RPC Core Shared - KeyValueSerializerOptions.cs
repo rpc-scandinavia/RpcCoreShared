@@ -1,4 +1,4 @@
-namespace RpcScandinavia.Core.Shared;
+namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
 using System.Globalization;
 using System.Collections.Generic;
@@ -11,6 +11,7 @@ using System.Collections.Generic;
 /// RPC Key/Value serialization options.
 /// </summary>
 public class RpcKeyValueSerializerOptions {
+	private DateTime modified;
 	private List<RpcKeyValueSerializerConverter> converters;
 	private Char hierarchySeparatorChar;
 	private Int32 maxDepth;
@@ -24,7 +25,6 @@ public class RpcKeyValueSerializerOptions {
 	private RpcKeyValueSerializerEnumOption serializeEnums;
 	private Boolean serializeTypeInfo;
 	private Boolean serializeTimeInfo;
-	private Boolean serializeKeepOriginalValueObject;
 	private RpcKeyValueSerializerExceptionOption serializeThrowExceptions;
 	private Boolean deserializeTypeInfo;
 	private Boolean deserializeEnums;
@@ -36,7 +36,7 @@ public class RpcKeyValueSerializerOptions {
 	// Constructors.
 	//------------------------------------------------------------------------------------------------------------------
 	public RpcKeyValueSerializerOptions() {
-		// Add buildin converters.
+		// Add build-in converters.
 		this.converters = new List<RpcKeyValueSerializerConverter>();
 		this.converters.Add(new RpcKeyValueSerializerConverterBoolean());
 		this.converters.Add(new RpcKeyValueSerializerConverterSByte());
@@ -56,6 +56,7 @@ public class RpcKeyValueSerializerOptions {
 		this.converters.Add(new RpcKeyValueSerializerConverterGuid());
 		this.converters.Add(new RpcKeyValueSerializerConverterString());
 
+		this.modified = DateTime.Now;
 		this.hierarchySeparatorChar = ':';
 		this.maxDepth = 64;
 		this.defaultOrderOfMembers = Int32.MaxValue;
@@ -63,7 +64,6 @@ public class RpcKeyValueSerializerOptions {
 		this.includePrivateFields = false;
 		this.includePublicProperties = true;
 		this.includePrivateProperties = false;
-		this.serializeKeepOriginalValueObject = false;
 		this.serializeReadonlyFields = false;
 		this.serializeReadonlyProperties = false;
 		this.serializeEnums = RpcKeyValueSerializerEnumOption.AsInteger;
@@ -77,8 +77,10 @@ public class RpcKeyValueSerializerOptions {
 	} // KeyValueSerializerOptions
 
 	public RpcKeyValueSerializerOptions(RpcKeyValueSerializerOptions options) {
+		this.modified = options.modified;
 		this.converters = new List<RpcKeyValueSerializerConverter>();
 		this.converters.AddRange(options.converters);
+		this.hierarchySeparatorChar = options.hierarchySeparatorChar;
 		this.maxDepth = options.maxDepth;
 		this.defaultOrderOfMembers = options.defaultOrderOfMembers;
 		this.hierarchySeparatorChar = options.hierarchySeparatorChar;
@@ -91,7 +93,6 @@ public class RpcKeyValueSerializerOptions {
 		this.serializeEnums = options.serializeEnums;
 		this.serializeTypeInfo = options.serializeTypeInfo;
 		this.serializeTimeInfo = options.serializeTimeInfo;
-		this.serializeKeepOriginalValueObject = options.serializeKeepOriginalValueObject;
 		this.serializeThrowExceptions = options.serializeThrowExceptions;
 		this.deserializeTypeInfo = options.deserializeTypeInfo;
 		this.deserializeEnums = options.deserializeEnums;
@@ -104,6 +105,15 @@ public class RpcKeyValueSerializerOptions {
 	//------------------------------------------------------------------------------------------------------------------
 	// Properties.
 	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets the last time when the options was modified.
+	/// </summary>
+	public DateTime Modified {
+		get {
+			return this.modified;
+		}
+	} // Modified
+
 	/// <summary>
 	/// Gets the list of converters.
 	/// </summary>
@@ -136,8 +146,10 @@ public class RpcKeyValueSerializerOptions {
 		set {
 			if (this.maxDepth < 1) {
 				this.maxDepth = 64;
+				this.modified = DateTime.Now;
 			} else {
 				this.maxDepth = value;
+				this.modified = DateTime.Now;
 			}
 		}
 	} // MaxDepth
@@ -153,6 +165,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.defaultOrderOfMembers = value;
+			this.modified = DateTime.Now;
 		}
 	} // DefaultOrderOfProperties
 
@@ -167,6 +180,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.includePublicFields = value;
+			this.modified = DateTime.Now;
 		}
 	} // IncludePublicFields
 
@@ -181,6 +195,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.includePrivateFields = value;
+			this.modified = DateTime.Now;
 		}
 	} // IncludePrivateFields
 
@@ -195,6 +210,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.includePublicProperties = value;
+			this.modified = DateTime.Now;
 		}
 	} // IncludePublicProperties
 
@@ -209,6 +225,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.includePrivateProperties = value;
+			this.modified = DateTime.Now;
 		}
 	} // IncludePrivateProperties
 
@@ -221,6 +238,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.serializeReadonlyFields = value;
+			this.modified = DateTime.Now;
 		}
 	} // SerializeReadonlyFields
 
@@ -233,6 +251,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.serializeReadonlyProperties = value;
+			this.modified = DateTime.Now;
 		}
 	} // SerializeReadonlyProperties
 
@@ -246,6 +265,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.serializeEnums = value;
+			this.modified = DateTime.Now;
 		}
 	} // SerializeEnums
 
@@ -259,6 +279,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.serializeTypeInfo = value;
+			this.modified = DateTime.Now;
 		}
 	} // SerializeTypeInfo
 
@@ -271,21 +292,9 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.serializeTimeInfo = value;
+			this.modified = DateTime.Now;
 		}
 	} // SerializeTimeInfo
-
-	/// <summary>
-	/// Gets or sets whether or not the original value object should be returned in the key/value collection, insted of
-	/// the value object converted into a string, using the appropiate converter.
-	/// </summary>
-	public Boolean SerializeKeepOriginalValueObject {
-		get {
-			return this.serializeKeepOriginalValueObject;
-		}
-		set {
-			this.serializeKeepOriginalValueObject = value;
-		}
-	} // SerializeKeepOriginalValueObject
 
 	/// <summary>
 	/// Gets or sets whether or not exceptions caught setting individual properties when serializing are thrown.
@@ -296,6 +305,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.serializeThrowExceptions = value;
+			this.modified = DateTime.Now;
 		}
 	} // SerializeThrowExceptions
 
@@ -310,6 +320,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.deserializeTypeInfo = value;
+			this.modified = DateTime.Now;
 		}
 	} // DeserializeTypeInfo
 
@@ -323,6 +334,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.deserializeEnums = value;
+			this.modified = DateTime.Now;
 		}
 	} // DeserializeEnums
 
@@ -335,6 +347,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.deserializeDateTimeStyles = value;
+			this.modified = DateTime.Now;
 		}
 	} // DeserializeDateTimeStyles
 
@@ -347,6 +360,7 @@ public class RpcKeyValueSerializerOptions {
 		}
 		set {
 			this.deserializeThrowExceptions = value;
+			this.modified = DateTime.Now;
 		}
 	} // DeserializeThrowExceptions
 	#endregion

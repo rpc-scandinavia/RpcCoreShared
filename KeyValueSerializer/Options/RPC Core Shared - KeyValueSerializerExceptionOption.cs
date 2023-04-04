@@ -1,4 +1,4 @@
-namespace RpcScandinavia.Core.Shared;
+namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
 
 #region RpcKeyValueSerializerExceptionOption

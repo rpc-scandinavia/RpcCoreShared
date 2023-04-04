@@ -1,4 +1,4 @@
-namespace RpcScandinavia.Core.Shared;
+namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,9 +12,31 @@ using System.Text;
 /// </summary>
 public abstract class RpcKeyValueSerializerConverter {
 
-	#region Internal abstract methods
+	#region Static methods
 	//------------------------------------------------------------------------------------------------------------------
-	// Internal abstract methods.
+	// Static methods.
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets a converter, that can can serialize and deserialize the specified type.
+	/// </summary>
+	/// <param name="type">The type.</param>
+	/// <param name="options">The serialization options.</param>
+	/// <returns>Returns the handler or null none exist.</returns>
+	public static RpcKeyValueSerializerConverter GetConverter(Type type, RpcKeyValueSerializerOptions options) {
+		foreach (RpcKeyValueSerializerConverter converter in options.Converters) {
+			if (converter.CanConvert(type) == true) {
+				return converter;
+			}
+		}
+
+		// No converter.
+		return null;
+	} // GetConverter
+	#endregion
+
+	#region Abstract methods
+	//------------------------------------------------------------------------------------------------------------------
+	// Abstract methods.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Gets a value indicating whether or not this converter can serialize and deserialize the specified type.
@@ -48,16 +70,17 @@ public abstract class RpcKeyValueSerializerConverter {
 // RpcKeyValueSerializerConverter<T>.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// A RPC Key/Value serializer converter base class, used when serializing and deserializing a object of a specifig type,
-/// to and from a string. Inherit this class and override the "Serialize" and "Deserialize" methods, to serialize and
-/// deserialize the type to and from a string value.
+/// A RPC Key/Value serializer converter, serializes and deserializes a object of a specifig type, to and from a string.
+///
+/// Inherit this class and override the "Serialize" and "Deserialize" methods, to serialize and deserialize the type
+/// to and from a string value.
 /// </summary>
 /// <typeparam name="T">The object type.</typeparam>
 public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerConverter {
 
-	#region Internal methods
+	#region Overridden methods
 	//------------------------------------------------------------------------------------------------------------------
-	// Internal methods.
+	// Overridden methods.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <inheritdoc />
 	public override Boolean CanConvert(Type type) {

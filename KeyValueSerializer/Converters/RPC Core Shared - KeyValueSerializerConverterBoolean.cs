@@ -1,6 +1,5 @@
-namespace RpcScandinavia.Core.Shared;
+namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
-using System.Globalization;
 
 #region RpcKeyValueSerializerConverterBoolean
 //----------------------------------------------------------------------------------------------------------------------
