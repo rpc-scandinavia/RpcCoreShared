@@ -28,7 +28,7 @@ public class RpcKeyValueSerializerDictionaryHandler : RpcKeyValueSerializerHandl
 		// Validate.
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is dictionary.
+		RpcKeyValueException.ValidateIsGenericDictionary(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();
@@ -85,10 +85,9 @@ public class RpcKeyValueSerializerDictionaryHandler : RpcKeyValueSerializerHandl
 	/// <inheritdoc />
 	public override Object Deserialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
 		// Validate.
-//Console.WriteLine($"DICTIONARY   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'");
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is dictionary.
+		RpcKeyValueException.ValidateIsGenericDictionary(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();

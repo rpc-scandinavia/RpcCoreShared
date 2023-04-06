@@ -1,8 +1,6 @@
 namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 #region RpcKeyValueSerializer
 //----------------------------------------------------------------------------------------------------------------------
@@ -507,22 +505,11 @@ public static class RpcKeyValueSerializer {
 			// Return the deserialized object.
 			return (T)result;
 		} catch (RpcKeyValueException exception) {
-//Console.WriteLine($"==================================================");
-//Console.WriteLine(exception.Message);
-//Console.WriteLine(exception.StackTrace);
-//Console.WriteLine($"==================================================");
 			// Throw the exception.
 			exception.Throw(options);
 
 			// Return the object or default.
 			return obj ?? default(T);
-//		} catch (Exception exception) {
-//Console.WriteLine($"==================================================");
-//Console.WriteLine(exception.Message);
-//Console.WriteLine(exception.StackTrace);
-//Console.WriteLine($"==================================================");
-//			// Return the object or default.
-//			return obj ?? default(T);
 		}
 	} // InternalDeserialize
 	#endregion

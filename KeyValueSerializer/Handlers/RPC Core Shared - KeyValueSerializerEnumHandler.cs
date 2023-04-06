@@ -26,39 +26,19 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 		// Validate.
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is enum.
+		RpcKeyValueException.ValidateIsEnum(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();
 
 		if (memberInfo.IsEnumWithFlags == false) {
 			// Enum without the flags attribute.
-			// Get the item.
-			Object itemObject = obj;
-
-			// Convert the item to either a integer or a string.
-			switch (options.SerializeEnums) {
-				case RpcKeyValueSerializerEnumOption.AsInteger:
-					itemObject = ((Int32)itemObject).ToString();
-					break;
-				case RpcKeyValueSerializerEnumOption.AsString:
-					itemObject = Enum.GetName(memberInfo.Type, itemObject).NotNull();
-					break;
-			}
-
-			// Get the member information for the item.
-			RpcMemberInfo member = new RpcMemberInfoType(
-				itemObject.GetType(),
-				$"",
-				((obj) => itemObject),
-				null
-			);
-
 			// Serialize the item.
-			base.SerializeMember<KeyValueType>(
-				member,
+			this.Serialize<KeyValueType>(
+				-1,
 				obj,
-				false,
+				memberInfo,
+				obj,
 				keyPrefix,
 				keyValueBuilder,
 				level,
@@ -73,29 +53,12 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 				itemIndex++;
 				Object itemObject = itemEnum;
 
-				// Convert the item to either a integer or a string.
-				switch (options.SerializeEnums) {
-					case RpcKeyValueSerializerEnumOption.AsInteger:
-						itemObject = ((Int32)itemObject).ToString();
-						break;
-					case RpcKeyValueSerializerEnumOption.AsString:
-						itemObject = Enum.GetName(memberInfo.Type, itemObject).NotNull();
-						break;
-				}
-
-				// Get the member information for the current item.
-				RpcMemberInfo member = new RpcMemberInfoType(
-					itemObject.GetType(),
-					$"{itemIndex}",
-					((obj) => itemObject),
-					null
-				);
-
 				// Serialize the item.
-				base.SerializeMember<KeyValueType>(
-					member,
+				this.Serialize<KeyValueType>(
+					itemIndex,
+					itemObject,
+					memberInfo,
 					obj,
-					false,
 					keyPrefix,
 					keyValueBuilder,
 					level,
@@ -105,13 +68,43 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 		}
 	} // Serialize
 
+	private void Serialize<KeyValueType>(Int32 itemIndex, Object itemObject, RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueBuilder<KeyValueType> keyValueBuilder, Int32 level, RpcKeyValueSerializerOptions options) {
+		// Convert the item to either a integer or a string.
+		switch (options.SerializeEnums) {
+			case RpcKeyValueSerializerEnumOption.AsInteger:
+				itemObject = ((Int32)itemObject).ToString();
+				break;
+			case RpcKeyValueSerializerEnumOption.AsString:
+				itemObject = Enum.GetName(memberInfo.Type, itemObject).NotNull();
+				break;
+		}
+
+		// Get the member information for the current item.
+		RpcMemberInfo member = new RpcMemberInfoType(
+			itemObject.GetType(),
+			(itemIndex > -1) ? $"{itemIndex}" : String.Empty,
+			((obj) => itemObject),
+			null
+		);
+
+		// Serialize the item.
+		base.SerializeMember<KeyValueType>(
+			member,
+			obj,
+			false,
+			keyPrefix,
+			keyValueBuilder,
+			level,
+			options
+		);
+	} // Serialize
+
 	/// <inheritdoc />
 	public override Object Deserialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
 		// Validate.
-//Console.WriteLine($"ENUM   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'");
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is enum.
+		RpcKeyValueException.ValidateIsEnum(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();
@@ -129,7 +122,6 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 				itemValue = Enum.Parse(memberInfo.Type, (String)itemValue);
 			}
 
-			//memberInfo.SetValue(obj, value);
 			obj = itemValue;
 		} else {
 			// Enum with the flags attribute.
@@ -138,19 +130,24 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 
 			// Deserialize each item.
 			foreach (String itemKey in keyValueProvider.GetKeys(keyPrefix)) {
-				// Get the value.
-				Object itemValue = keyValueProvider.GetValue(keyPrefix, itemKey);
+				try {
+					// Get the value.
+					Object itemValue = keyValueProvider.GetValue(keyPrefix, itemKey);
 
-				// Convert the item from a string.
-				Int32 itemValueNumeric = this.ToInt32OrDefault((String)itemValue);
-				if (itemValueNumeric > -1) {
-					itemValue = Enum.ToObject(memberInfo.Type, itemValueNumeric);
-				} else {
-					itemValue = Enum.Parse(memberInfo.Type, (String)itemValue);
+					// Convert the item from a string.
+					Int32 itemValueNumeric = this.ToInt32OrDefault((String)itemValue);
+					if (itemValueNumeric > -1) {
+						itemValue = Enum.ToObject(memberInfo.Type, itemValueNumeric);
+					} else {
+						itemValue = Enum.Parse(memberInfo.Type, (String)itemValue);
+					}
+
+					// Set the flag.
+					RpcKeyValueSerializerEnumHandler.SetEnumFlag(memberInfo.Type, ref obj, itemValue);
+				} catch (RpcKeyValueException exception) {
+					// Throw the exception.
+					exception.Throw(options);
 				}
-
-				// Set the flag.
-				RpcKeyValueSerializerEnumHandler.SetEnumFlag(memberInfo.Type, ref obj, itemValue);
 			}
 		}
 

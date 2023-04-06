@@ -27,7 +27,7 @@ public class RpcKeyValueSerializerArrayHandler : RpcKeyValueSerializerHandler {
 		// Validate.
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is array.
+		RpcKeyValueException.ValidateIsArray(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();
@@ -72,10 +72,9 @@ public class RpcKeyValueSerializerArrayHandler : RpcKeyValueSerializerHandler {
 	/// <inheritdoc />
 	public override Object Deserialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
 		// Validate.
-//Console.WriteLine($"ARRAY   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'");
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is array.
+		RpcKeyValueException.ValidateIsArray(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();

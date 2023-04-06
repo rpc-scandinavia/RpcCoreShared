@@ -28,7 +28,7 @@ public class RpcKeyValueSerializerListHandler : RpcKeyValueSerializerHandler {
 		// Validate.
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is generic list.
+		RpcKeyValueException.ValidateIsGenericList(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();
@@ -73,10 +73,9 @@ public class RpcKeyValueSerializerListHandler : RpcKeyValueSerializerHandler {
 	/// <inheritdoc />
 	public override Object Deserialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
 		// Validate.
-//Console.WriteLine($"LIST   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'");
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
-		// Validate is generic list.
+		RpcKeyValueException.ValidateIsGenericList(memberInfo);
 
 		// Get the type.
 		Type objType = obj.GetType();

@@ -1,8 +1,6 @@
 namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using RpcScandinavia.Core;
 
 #region RpcKeyValueBuilder
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,10 +45,11 @@ public class RpcKeyValueBuilder<KeyValueType> {
 	} // Values
 
 	/// <summary>
-	/// Add a new key/value item to the collection.
+	/// Add a new key/value item, under the key with the key prefix.
 	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
 	/// <param name="key">The key.</param>
-	/// <param name="value">The string.</param>
+	/// <param name="value">The value.</param>
 	public void Add(String keyPrefix, String key, String value) {
 		// Validate.
 		if (keyPrefix == null) {
@@ -69,6 +68,12 @@ public class RpcKeyValueBuilder<KeyValueType> {
 		);
 	} // Add
 
+	/// <summary>
+	/// Add a new key/value item containing the type meta data, under the key with the key prefix.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <param name="key">The key.</param>
+	/// <param name="type">The type.</param>
 	public void AddTypeMetadata(String keyPrefix, String key, Type type) {
 		// Validate.
 		if (keyPrefix == null) {
@@ -91,6 +96,12 @@ public class RpcKeyValueBuilder<KeyValueType> {
 	} // AddTypeMetadata
 
 	// TODO: Perhaps not in both "RpcKeyValueBuilder" and "RpcKeyValueProvider".
+	/// <summary>
+	/// Gets the key prefix for the next level, under the key with the key prefix.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <param name="key">The key.</param>
+	/// <returns>The key prefix.</returns>
 	public String GetNextLevelKeyPrefix(String keyPrefix, String key) {
 		// Validate.
 		if (keyPrefix == null) {

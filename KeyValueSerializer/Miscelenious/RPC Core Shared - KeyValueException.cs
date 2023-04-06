@@ -7,7 +7,7 @@ using System.Linq;
 // RpcKeyValueException.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// The key/value serializer exception includes information about the exception type.
+/// The key/value exception includes information about the exception type.
 /// </summary>
 public class RpcKeyValueException : Exception {
 	private readonly RpcKeyValueExceptionType type;
@@ -76,6 +76,12 @@ public class RpcKeyValueException : Exception {
 		}
 	} // ValidateLevel
 
+	/// <summary>
+	/// Throws an exception if the object cannot be assigned to the member information type.
+	/// </summary>
+	/// <param name="memberInfo">The member information.</param>
+	/// <param name="obj">The object.</param>
+	/// <param name="throwOnNullObject">Specify to throw an exception when the object is null.</param>
 	public static void ValidateIsAssignableFrom(RpcMemberInfo memberInfo, Object obj, Boolean throwOnNullObject = false) {
 		if ((throwOnNullObject == false) && (obj == null)) {
 			return;
@@ -89,6 +95,58 @@ public class RpcKeyValueException : Exception {
 			);
 		}
 	} // ValidateIsAssignableFrom
+
+	/// <summary>
+	/// Throws an exception if the member information is not of a generic list.
+	/// </summary>
+	/// <param name="memberInfo">The member information.</param>
+	public static void ValidateIsGenericList(RpcMemberInfo memberInfo) {
+		if (memberInfo.IsGenericList == false) {
+			throw new RpcKeyValueException(
+				$"The '{memberInfo.Type.Name}' type is not a generic list.",
+				RpcKeyValueExceptionType.Item
+			);
+		}
+	} // ValidateIsGenericList
+
+	/// <summary>
+	/// Throws an exception if the member information is not of an array.
+	/// </summary>
+	/// <param name="memberInfo">The member information.</param>
+	public static void ValidateIsArray(RpcMemberInfo memberInfo) {
+		if (memberInfo.IsArray == false) {
+			throw new RpcKeyValueException(
+				$"The '{memberInfo.Type.Name}' type is not an array.",
+				RpcKeyValueExceptionType.Item
+			);
+		}
+	} // ValidateIsArray
+
+	/// <summary>
+	/// Throws an exception if the member information is not of a generic dictionary.
+	/// </summary>
+	/// <param name="memberInfo">The member information.</param>
+	public static void ValidateIsGenericDictionary(RpcMemberInfo memberInfo) {
+		if (memberInfo.IsGenericDictionary == false) {
+			throw new RpcKeyValueException(
+				$"The '{memberInfo.Type.Name}' type is not a generic dictionary.",
+				RpcKeyValueExceptionType.Item
+			);
+		}
+	} // ValidateIsGenericDictionary
+
+	/// <summary>
+	/// Throws an exception if the member information is not of a enum or a enum with flag attribute.
+	/// </summary>
+	/// <param name="memberInfo">The member information.</param>
+	public static void ValidateIsEnum(RpcMemberInfo memberInfo) {
+		if (memberInfo.IsEnum == false) {
+			throw new RpcKeyValueException(
+				$"The '{memberInfo.Type.Name}' type is not a enum.",
+				RpcKeyValueExceptionType.Item
+			);
+		}
+	} // ValidateIsEnum
 
 } // RpcKeyValueException
 #endregion

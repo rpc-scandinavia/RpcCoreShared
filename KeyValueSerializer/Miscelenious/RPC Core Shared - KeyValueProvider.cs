@@ -47,6 +47,7 @@ public class RpcKeyValueProvider<KeyValueType> {
 		this.options = options;
 	} // RpcKeyValueProvider
 
+/*
 	public Int32 GetCount(String keyPrefix) {
 		// Get a list of keys:
 		// 1) Get a string list of keys from the values (key/value pair).
@@ -65,7 +66,14 @@ public class RpcKeyValueProvider<KeyValueType> {
 			.Distinct()
 			.Count();
 	} // GetCount
+*/
 
+	/// <summary>
+	/// Gets the number of values under the key with the key prefix.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <param name="key">The key.</param>
+	/// <returns>The number of values.</returns>
 	public Int32 GetCount(String keyPrefix, String key) {
 		// Get a list of keys:
 		// 1) Get a string list of keys from the values (key/value pair).
@@ -85,6 +93,11 @@ public class RpcKeyValueProvider<KeyValueType> {
 			.Count();
 	} // GetCount
 
+	/// <summary>
+	/// Gets the keys with the key prefix.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <returns>The enumerator with the matching keys.</returns>
 	public IEnumerable<String> GetKeys(String keyPrefix) {
 		// Get a list of keys:
 		// 1) Get a string list of keys from the values (key/value pair).
@@ -103,6 +116,12 @@ public class RpcKeyValueProvider<KeyValueType> {
 			.Distinct();
 	} // GetKeys
 
+	/// <summary>
+	/// Gets the keys with the key prefix.
+	/// The keys are converted to <see cref="System.Int32" />, and non numeric keys are ignored.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <returns>The enumerator with the matching keys.</returns>
 	public IEnumerable<Int32> GetKeysAsInt32(String keyPrefix) {
 		// Get a list of keys:
 		// 1) Get a string list of keys from the values (key/value pair).
@@ -131,10 +150,10 @@ public class RpcKeyValueProvider<KeyValueType> {
 	} // GetKeysAsInt32
 
 	/// <summary>
-	/// Gets all the key/value items where the key starts with the specified key prefix.
+	/// Gets the key/value items where the key matches the key prefix.
 	/// </summary>
 	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
-	/// <returns>The matching key/value items.</returns>
+	/// <returns>The enumerator with the matching key/value items.</returns>
 	public IEnumerable<KeyValueType> GetValues(String keyPrefix) {
 		// Validate.
 		if (keyPrefix == null) {
@@ -146,34 +165,12 @@ public class RpcKeyValueProvider<KeyValueType> {
 			.Where((keyValue) => getKey(keyValue).StartsWith(keyPrefix));
 	} // GetValues
 
-/*
 	/// <summary>
-	/// Gets all the key/value items where the key starts with the specified key prefix.
+	/// Gets the key/value items under the key with the key prefix.
 	/// </summary>
 	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
 	/// <param name="key">The key.</param>
-	/// <returns>The matching key/value items.</returns>
-	public IEnumerable<KeyValueType> GetValues(String keyPrefix, String key) {
-		// Validate.
-		if (keyPrefix == null) {
-			throw new NullReferenceException(nameof(keyPrefix));
-		}
-		if (key == null) {
-			throw new NullReferenceException(nameof(key));
-		}
-
-		// Return the matching key/value items.
-		key = $"{keyPrefix}{this.options.HierarchySeparatorChar}{key}".Trim(options.HierarchySeparatorChar);
-		return this.values
-			.Where((keyValue) => getKey(keyValue).StartsWith(key));
-	} // GetValues
-*/
-
-	/// <summary>
-	/// Gets the value from the key/value item where the key matches the specified key.
-	/// </summary>
-	/// <param name="key">The key.</param>
-	/// <returns>The value, or null.</returns>
+	/// <returns>The enumerator with the matching key/value items.</returns>
 	public String GetValue(String keyPrefix, String key) {
 		// Validate.
 		if (keyPrefix == null) {
@@ -191,6 +188,12 @@ public class RpcKeyValueProvider<KeyValueType> {
 			.FirstOrDefault();
 	} // GetValue
 
+	/// <summary>
+	/// Gets the type meta data associated with the key with the key prefix.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <param name="key">The key.</param>
+	/// <returns>The type meta data or null.</returns>
 	public String GetTypeMetadata(String keyPrefix, String key) {
 		// Validate.
 		if (keyPrefix == null) {
@@ -209,6 +212,12 @@ public class RpcKeyValueProvider<KeyValueType> {
 	} // GetTypeMetadata
 
 	// TODO: Perhaps not in both "RpcKeyValueBuilder" and "RpcKeyValueProvider".
+	/// <summary>
+	/// Gets the key prefix for the next level, under the key with the key prefix.
+	/// </summary>
+	/// <param name="keyPrefix">The prefix to the serialized keys.</param>
+	/// <param name="key">The key.</param>
+	/// <returns>The key prefix.</returns>
 	public String GetNextLevelKeyPrefix(String keyPrefix, String key) {
 		// Validate.
 		if (keyPrefix == null) {

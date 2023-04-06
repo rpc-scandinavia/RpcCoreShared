@@ -78,7 +78,6 @@ public class RpcKeyValueSerializerObjectHandler : RpcKeyValueSerializerHandler {
 	/// <inheritdoc />
 	public override Object Deserialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
 		// Validate.
-//Console.WriteLine($"OBJECT   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'   '{keyValueProvider.GetCount(keyPrefix, memberInfo.Name)}'");
 		RpcKeyValueException.ValidateLevel(level, options);
 		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
 

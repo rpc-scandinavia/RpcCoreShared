@@ -6,7 +6,7 @@ using System;
 // RpcKeyValueException.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// The exception type.
+/// The key/value exception type.
 /// </summary>
 public enum RpcKeyValueExceptionType {
 
