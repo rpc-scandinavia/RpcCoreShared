@@ -60,13 +60,6 @@ public static class RpcKeyValueSerializer {
 		// Serialize the object into key/values.
 		List<KeyValuePair<String, String>> values = RpcKeyValueSerializer.Serialize(obj, keyValueSerializerOptions);
 
-File.WriteAllLines(
-	"/data/users/rpc@rpc-scandinavia.dk/Desktop/Linux/Copied test.txt",
-	values
-		.ConvertAll<String>((keyValue) => $"{keyValue.Key} = {keyValue.Value}")
-		.ToList()
-);
-
 		// Deserialize the key/values into a new object instance.
 		return RpcKeyValueSerializer.Deserialize<T>(values, keyValueSerializerOptions);
 	} // Copy
