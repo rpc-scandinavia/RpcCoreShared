@@ -73,8 +73,8 @@ File.WriteAllLines(
 			1234,
 			new Guid("ff232da4-42e1-4673-b176-0049a55d5795"),
 			new DateTime(2000, 05, 04, 12, 34, 56),
-			"This is a test object."
-/*
+			"This is a test object.",
+
 			// List of generics.
 			new DataGeneric<String>[] {
 				new DataGeneric<String>("I am the first comment."),
@@ -87,12 +87,24 @@ File.WriteAllLines(
 				new DataAbstractA("the first text abstract"),
 				new DataAbstractB(true),
 				new DataAbstractA("the last text abstract"),
-				new DataAbstractB(false),
+				new DataAbstractB(false)
 			},
+
+			// Dictionary.
+			new Dictionary<Double, DataGeneric<Int16>>() {
+				{ 100.25, new DataGeneric<Int16>(100) },
+				{ 531.03, new DataGeneric<Int16>(331) },
+				{ 999.99, new DataGeneric<Int16>(999) }
+			},
+
+			// Enum.
+			DataEnumA.Two,
+
+			// Enum with flags.
+			(DataEnumB.Bravo | DataEnumB.Delta),
 
 			// Tag.
 			(repeatAsTag == true) ? this.GetTestData(false) : null
-*/
 		);
 	} // GetTestData
 
@@ -103,32 +115,55 @@ File.WriteAllLines(
 			new KeyValuePair<String, String>("Guid", "ff232da4-42e1-4673-b176-0049a55d5795"),
 			new KeyValuePair<String, String>("Time", "2000-05-04T12:34:56.0000000"),
 			new KeyValuePair<String, String>("Text", "This is a test object."),
-/*
-			new KeyValuePair<String, String>("Comments:0:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataGeneric`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
+
 			new KeyValuePair<String, String>("Comments:0:Value", "I am the first comment."),
-			new KeyValuePair<String, String>("Comments:1:$Type", ""),
 			new KeyValuePair<String, String>("Comments:1:Value", "I am the second comment."),
-			new KeyValuePair<String, String>("Comments:2:$Type", ""),
-			new KeyValuePair<String, String>("Comments:2:Value", "I am the last comment"),
-			new KeyValuePair<String, String>("Abstracts:0:$Type", ""),
+			new KeyValuePair<String, String>("Comments:2:Value", "I am the last comment."),
+
+			new KeyValuePair<String, String>("Abstracts:0:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Abstracts:0:StringValue", "the first text abstract"),
-			new KeyValuePair<String, String>("Abstracts:1:BoolValue", "true"),
+			new KeyValuePair<String, String>("Abstracts:1:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractB, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
+			new KeyValuePair<String, String>("Abstracts:1:BoolValue", "True"),
+			new KeyValuePair<String, String>("Abstracts:2:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Abstracts:2:StringValue", "the last text abstract"),
-			new KeyValuePair<String, String>("Abstracts:3:BoolValue", "false"),
+			new KeyValuePair<String, String>("Abstracts:3:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractB, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
+			new KeyValuePair<String, String>("Abstracts:3:BoolValue", "False"),
+
+			new KeyValuePair<String, String>("Mappings:100.25:Value", "100"),
+			new KeyValuePair<String, String>("Mappings:531.03:Value", "331"),
+			new KeyValuePair<String, String>("Mappings:999.99:Value", "999"),
+
+			new KeyValuePair<String, String>("EnumA", "2"),
+			new KeyValuePair<String, String>("EnumB:0", "2"),
+			new KeyValuePair<String, String>("EnumB:1", "8"),
+
 			new KeyValuePair<String, String>("Tag:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Tag:Id", "1234"),
 			new KeyValuePair<String, String>("Tag:Guid", "ff232da4-42e1-4673-b176-0049a55d5795"),
-			new KeyValuePair<String, String>("Tag:Time", "2000-05-04 12:34:56"),
+			new KeyValuePair<String, String>("Tag:Time", "2000-05-04T12:34:56.0000000"),
 			new KeyValuePair<String, String>("Tag:Text", "This is a test object."),
+
 			new KeyValuePair<String, String>("Tag:Comments:0:Value", "I am the first comment."),
 			new KeyValuePair<String, String>("Tag:Comments:1:Value", "I am the second comment."),
-			new KeyValuePair<String, String>("Tag:Comments:2:Value", "I am the last comment"),
+			new KeyValuePair<String, String>("Tag:Comments:2:Value", "I am the last comment."),
+
+			new KeyValuePair<String, String>("Tag:Abstracts:0:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Tag:Abstracts:0:StringValue", "the first text abstract"),
-			new KeyValuePair<String, String>("Tag:Abstracts:1:BoolValue", "true"),
+			new KeyValuePair<String, String>("Tag:Abstracts:1:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractB, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
+			new KeyValuePair<String, String>("Tag:Abstracts:1:BoolValue", "True"),
+			new KeyValuePair<String, String>("Tag:Abstracts:2:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Tag:Abstracts:2:StringValue", "the last text abstract"),
-			new KeyValuePair<String, String>("Tag:Abstracts:3:BoolValue", "false"),
-			new KeyValuePair<String, String>("Tag:Tag", "")
-*/
+			new KeyValuePair<String, String>("Tag:Abstracts:3:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataAbstractB, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
+			new KeyValuePair<String, String>("Tag:Abstracts:3:BoolValue", "False"),
+
+			new KeyValuePair<String, String>("Tag:Mappings:100.25:Value", "100"),
+			new KeyValuePair<String, String>("Tag:Mappings:531.03:Value", "331"),
+			new KeyValuePair<String, String>("Tag:Mappings:999.99:Value", "999"),
+
+			new KeyValuePair<String, String>("Tag:EnumA", "2"),
+			new KeyValuePair<String, String>("Tag:EnumB:0", "2"),
+			new KeyValuePair<String, String>("Tag:EnumB:1", "8"),
+
 		};
 	} // GetTestResult
 
@@ -139,30 +174,40 @@ public class DataA : IEqualityComparer<DataA> {
 	public Guid Guid { get; set; }
 	public DateTime Time { get; set; }
 	public String Text { get; set; }
-//	public List<DataGeneric<String>> Comments { get; set; }
-//	public DataAbstract[] Abstracts { get; set; }
-//	public Object Tag { get; set; }
+	public List<DataGeneric<String>> Comments { get; set; }
+	public DataAbstract[] Abstracts { get; set; }
+	public Dictionary<Double, DataGeneric<Int16>> Mappings { get; set; }
+	public DataEnumA EnumA { get; set; }
+	public DataEnumB EnumB { get; set; }
+	public Object Tag { get; set; }
 
 	public DataA() {
 		this.Id = 0;
 		this.Guid = Guid.Empty;
 		this.Time = DateTime.MinValue;
 		this.Text = String.Empty;
-//		this.Comments = new List<DataGeneric<String>>();
-//		this.Abstracts = new DataAbstract[0];
-//		this.Tag = null;
+		this.Comments = new List<DataGeneric<String>>();
+		this.Abstracts = new DataAbstract[0];
+		this.Mappings = new Dictionary<Double, DataGeneric<Int16>>();
+		this.EnumA = DataEnumA.None;
+		this.EnumB = DataEnumB.None;
+		this.Tag = null;
 	} // DataA
 
-	public DataA(Int32 id, Guid guid, DateTime time, String text) {
-	//public DataA(Int32 id, Guid guid, DateTime time, String text, DataGeneric<String>[] comments, DataAbstract[] abstracts, Object tag) {
+	//public DataA(Int32 id, Guid guid, DateTime time, String text, Object tag) {
+	//public DataA(Int32 id, Guid guid, DateTime time, String text, DataGeneric<String>[] comments, Object tag) {
+	public DataA(Int32 id, Guid guid, DateTime time, String text, DataGeneric<String>[] comments, DataAbstract[] abstracts, Dictionary<Double, DataGeneric<Int16>> mappings, DataEnumA enumA, DataEnumB enumB, Object tag) {
 		this.Id = id;
 		this.Guid = guid;
 		this.Time = time;
 		this.Text = text;
-//		this.Comments = new List<DataGeneric<String>>();
-//		this.Comments.AddRange(comments);
-//		this.Abstracts = abstracts;
-//		this.Tag = tag;
+		this.Comments = new List<DataGeneric<String>>();
+		this.Comments.AddRange(comments);
+		this.Abstracts = abstracts;
+		this.Mappings = mappings;
+		this.EnumA = enumA;
+		this.EnumB = enumB;
+		this.Tag = tag;
 	} // DataA
 
 	public override Boolean Equals(Object obj) {
@@ -174,23 +219,29 @@ public class DataA : IEqualityComparer<DataA> {
 	} // GetHashCode
 
 	public Boolean Equals(DataA valueA, DataA valueB) {
-		Debug.WriteLine($"Comparing two DataA objects.");
+		Debug.WriteLine($"Comparing two DataA objects ({valueA != null}, {valueB != null}).");
 		Debug.WriteLine($"       Id:  {(valueA.Id.Equals(valueB.Id))}");
 		Debug.WriteLine($"     Guid:  {(valueA.Guid.Equals(valueB.Guid))}");
 		Debug.WriteLine($"     Time:  {(valueA.Time.Equals(valueB.Time))}");
 		Debug.WriteLine($"     Text:  {(valueA.Text.Equals(valueB.Text))}");
-//		Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}");
-//		Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}");
-//		Debug.WriteLine($"      Tag:  {(valueA.Tag.EqualsForObjects(valueB.Tag))}");
+		Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}");
+		Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}");
+		Debug.WriteLine($" Mappings:  {(valueA.Mappings.SequenceEqual(valueB.Mappings))}");
+		Debug.WriteLine($"    EnumA:  {(valueA.EnumA.Equals(valueB.EnumA))}");
+		Debug.WriteLine($"    EnumB:  {(valueA.EnumB.Equals(valueB.EnumB))}");
+		Debug.WriteLine($"      Tag:  {(valueA.Tag.EqualsForObjects(valueB.Tag))}");
 
 		return (
 			(valueA.Id.Equals(valueB.Id)) &&
 			(valueA.Guid.Equals(valueB.Guid)) &&
 			(valueA.Time.Equals(valueB.Time)) &&
-			(valueA.Text.Equals(valueB.Text))
-//			(valueA.Comments.SequenceEqual(valueB.Comments)) &&
-//			(valueA.Abstracts.SequenceEqual(valueB.Abstracts)) &&
-//			(valueA.Tag.EqualsForObjects(valueB.Tag))
+			(valueA.Text.Equals(valueB.Text)) &&
+			(valueA.Comments.SequenceEqual(valueB.Comments)) &&
+			(valueA.Abstracts.SequenceEqual(valueB.Abstracts)) &&
+			(valueA.Mappings.SequenceEqual(valueB.Mappings)) &&
+			(valueA.EnumA.Equals(valueB.EnumA)) &&
+			(valueA.EnumB.Equals(valueB.EnumB)) &&
+			(valueA.Tag.EqualsForObjects(valueB.Tag))
 		);
 	} // CompareTo
 
@@ -199,11 +250,13 @@ public class DataA : IEqualityComparer<DataA> {
 			value.Id,
 			value.Guid,
 			value.Time,
-			value.Text
-//			value.Comments,
-//			value.Comments,
-//			value.Abstracts,
-//			value.Tag
+			value.Text,
+			value.Comments,
+			value.Abstracts,
+			value.Mappings,
+//			value.EnumA,
+//			value.EnumB,
+			value.Tag
 		);
 	} // GetHashCode
 
@@ -324,6 +377,23 @@ public class DataAbstractB : DataAbstract, IEqualityComparer<DataAbstractB> {
 	} // GetHashCode
 
 } // DataAbstractB
+
+public enum DataEnumA {
+	None = 0,
+	One = 1,
+	Two = 2,
+	Three = 3
+} // DataEnumA
+
+[Flags]
+public enum DataEnumB {
+	None 		= 0b_0000_0000,  		// 0
+	Alpha 		= 0b_0000_0001,  		// 1
+	Bravo 		= 0b_0000_0010,  		// 2
+	Charlie 	= 0b_0000_0100,  		// 4
+	Delta 		= 0b_0000_1000,  		// 8
+	Echo 		= 0b_0001_0000,  		// 16
+} // DataEnumB
 
 public static class DataComparerExtensions {
 

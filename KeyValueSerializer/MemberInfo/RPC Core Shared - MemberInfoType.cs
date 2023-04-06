@@ -144,9 +144,7 @@ public class RpcMemberInfoType : RpcMemberInfo {
 		if (this.getValue != null) {
 			return this.getValue(obj);
 		} else {
-			// Because this member information, do not have a proprty or field to get the value from, it returns the
-			// value. So the object being gotton, is the same value returned.
-			return obj;
+			return null;
 		}
 	} // GetValue
 
@@ -154,10 +152,6 @@ public class RpcMemberInfoType : RpcMemberInfo {
 	public override void SetValue(Object obj, Object value) {
 		if (this.setValue != null) {
 			this.setValue(obj, value);
-		} else {
-			// Because this member information, do not have a proprty or field to set the value to, it returns the value
-			// back via the reference. So the object being set, is replaced with the value being set.
-			obj = value;
 		}
 	} // SetValue
 	#endregion

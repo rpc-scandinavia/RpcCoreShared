@@ -10,7 +10,8 @@ using System.Text;
 // RpcKeyValueSerializerObjectHandler.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// RPC Key/Value serializer handler, that serializes and deserializes any object to and from one or more key/value objects.
+/// This key/value serializer handler, serializes and deserializes any object of a specifig type, to and from one or
+/// more key/value items.
 /// </summary>
 public class RpcKeyValueSerializerObjectHandler : RpcKeyValueSerializerHandler {
 
@@ -19,164 +20,102 @@ public class RpcKeyValueSerializerObjectHandler : RpcKeyValueSerializerHandler {
 	// Overridden methods.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <inheritdoc />
-	public override Boolean CanHandle(Type type, RpcKeyValueSerializerOptions options) {
+	public override Boolean CanHandle(RpcMemberInfo memberInfo, RpcKeyValueSerializerOptions options) {
+		// This is the default handler, and the top level handler.
 		return true;
 	} // CanHandle
 
 	/// <inheritdoc />
-	public override void Serialize<KeyValueType>(Object obj, List<KeyValueType> values, String keyPrefix, Func<String, String, KeyValueType> createKeyValueInstance, RpcKeyValueSerializerOptions options) {
+	public override void Serialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueBuilder<KeyValueType> keyValueBuilder, Int32 level, RpcKeyValueSerializerOptions options) {
+		// Validate.
+		RpcKeyValueException.ValidateLevel(level, options);
+		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
+
 		// Get the type.
-		Type type = obj.GetType();
+		Type objType = obj.GetType();
 
-		// Get the member information of the type.
-		List<RpcMemberInfo> members = new List<RpcMemberInfo>();
-
-		foreach (FieldInfo fieldInfo in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			members.Add(new RpcMemberInfoField(fieldInfo));
-		}
-
-		foreach (PropertyInfo propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			members.Add(new RpcMemberInfoProperty(propertyInfo));
-		}
-
+		// Special case, only on level zero (top level object).
 		// Serialize meta data.
-		if (options.SerializeTypeInfo == true) {
-			String key = $"{keyPrefix}{options.HierarchySeparatorChar}$Type".Trim(options.HierarchySeparatorChar);
-			values.Add(
-				createKeyValueInstance(
-					key,
-					type.AssemblyQualifiedName
-				)
-			);
+		if (((level == 0)) && (
+			(
+				(options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.Always)
+			) || (
+				(options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop)
+			) || (
+				(memberInfo.Type != objType) &&
+				(options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.Required)
+			))) {
+			keyValueBuilder.AddTypeMetadata(keyPrefix, String.Empty, objType);
 		}
 
-		// Serialize each member.
-		foreach (RpcMemberInfo member in members) {
-			if (member.ShouldSerialize(options) == true) {
-				try {
-					Boolean serialized = false;
-					String key = $"{keyPrefix}{options.HierarchySeparatorChar}{member.Name}".Trim(options.HierarchySeparatorChar);
+		// Get the items, which is the members of the type.
+		List<RpcMemberInfo> items = new List<RpcMemberInfo>();
+		foreach (FieldInfo fieldInfo in objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+			items.Add(new RpcMemberInfoField(fieldInfo));
+		}
+		foreach (PropertyInfo propertyInfo in objType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+			items.Add(new RpcMemberInfoProperty(propertyInfo));
+		}
 
-					// Serialize using a converter.
-					if (serialized == false) {
-						RpcKeyValueSerializerConverter converter = RpcKeyValueSerializerConverter.GetConverter(member.Type, options);
-						if (converter != null) {
-							values.Add(
-								createKeyValueInstance(
-									key,
-									converter.InternalSerialize(member.GetValue(obj), options)
-								)
-							);
-							serialized = true;
-						}
-					}
-
-					// Serialize using a handler.
-					if (serialized == false) {
-						RpcKeyValueSerializerHandler handler = RpcKeyValueSerializerHandler.GetHandler(member.Type, options);
-						if (handler is not RpcKeyValueSerializerObjectHandler) {
-							handler.Serialize<KeyValueType>(member.GetValue(obj), values, key, createKeyValueInstance, options);
-							serialized = true;
-						}
-					}
-
-					// Undble to serialize the member.
-					throw new Exception($"Unable to serialize member '{member.Name}' of type {member.Type.Name}.");
-				} catch {
-					// Throw the exception.
-					if (options.SerializeThrowExceptions.HasFlag(RpcKeyValueSerializerExceptionOption.ThrowItemExceptions) == true) {
-						throw;
-					}
-				}
+		// Serialize each item.
+		foreach (RpcMemberInfo item in items) {
+			try {
+				base.SerializeMember<KeyValueType>(
+					item,
+					obj,
+					item.IsAbstract,
+					keyPrefix,
+					keyValueBuilder,
+					level,
+					options
+				);
+			} catch (RpcKeyValueException exception) {
+				// Throw the exception.
+				exception.Throw(options);
 			}
 		}
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Object Deserialize<KeyValueType>(Object obj, IEnumerable<KeyValueType> values, String keyPrefix, Func<KeyValueType, String> getKey, Func<KeyValueType, String> getValue, RpcKeyValueSerializerOptions options) {
-		// If the object is null, then create a new instance of the object, of the type taken from the
-		// meta data "$Type" value, or throw an exception if that does not exist.
-		if (options.DeserializeTypeInfo == true) {
-			String key = $"{keyPrefix}{options.HierarchySeparatorChar}$Type".Trim(options.HierarchySeparatorChar);
-			String typeName = values
-				.Where((keyValue) => getKey(keyValue).Equals(key))
-				.Select((keyValue) => getValue(keyValue))
-				.FirstOrDefault();
-			if (typeName.IsNullOrWhiteSpace() == false) {
-				Type newType = Type.GetType(typeName, false);
-				if (newType != null) {
-					Object newObject = Activator.CreateInstance(newType);
-					if (newObject != null) {
-						obj = newObject;
-					}
-				}
-			}
+	public override Object Deserialize<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
+		// Validate.
+//Console.WriteLine($"OBJECT   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'   '{keyValueProvider.GetCount(keyPrefix, memberInfo.Name)}'");
+		RpcKeyValueException.ValidateLevel(level, options);
+//		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
+
+		// Special case, only on level zero (top level object).
+		// Create a new instance of the object, using the type taken from the meta data "$Type" value, or the member
+		// information.
+		if (level == 0) {
+			obj = base.CreateInstance<KeyValueType>(memberInfo, keyPrefix, keyValueProvider, obj);
 		}
 
 		// Get the type.
-		Type type = obj.GetType();
+		Type objType = obj.GetType();
 
-		// Get the member information of the type.
-		List<RpcMemberInfo> members = new List<RpcMemberInfo>();
-
-		foreach (FieldInfo fieldInfo in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			members.Add(new RpcMemberInfoField(fieldInfo));
+		// Get the items, which is the members of the type.
+		List<RpcMemberInfo> items = new List<RpcMemberInfo>();
+		foreach (FieldInfo fieldInfo in objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+			items.Add(new RpcMemberInfoField(fieldInfo));
+		}
+		foreach (PropertyInfo propertyInfo in objType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+			items.Add(new RpcMemberInfoProperty(propertyInfo));
 		}
 
-		foreach (PropertyInfo propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			members.Add(new RpcMemberInfoProperty(propertyInfo));
-		}
-
-		// Serialize each member.
-		foreach (RpcMemberInfo member in members) {
-			if (member.ShouldSerialize(options) == true) {
-				try {
-					String key = $"{keyPrefix}{options.HierarchySeparatorChar}{member.Name}".Trim(options.HierarchySeparatorChar);
-					String value = values
-						.Where((keyValue) => getKey(keyValue).Equals(key))
-						.Select((keyValue) => getValue(keyValue))
-						.FirstOrDefault();
-
-					// Serialize using a converter.
-					if (value != null) {
-						RpcKeyValueSerializerConverter converter = RpcKeyValueSerializerConverter.GetConverter(member.Type, options);
-						if (converter != null) {
-							member.SetValue(
-								obj,
-								converter.InternalDeserialize(value, options)
-							);
-							value = null;
-						}
-					}
-
-					// Serialize using a handler.
-					if (value != null) {
-						RpcKeyValueSerializerHandler handler = RpcKeyValueSerializerHandler.GetHandler(member.Type, options);
-						if (handler is not RpcKeyValueSerializerObjectHandler) {
-							Object valueObject = member.GetValue(obj);
-							member.SetValue(
-								obj,
-								handler.Deserialize<KeyValueType>(
-									valueObject,
-									values,
-									keyPrefix,
-									getKey,
-									getValue,
-									options
-								)
-							);
-							value = null;
-						}
-					}
-
-					// Undble to deserialize the member.
-					throw new Exception($"Unable to deserialize member '{member.Name}' of type {member.Type.Name}.");
-				} catch {
-					// Throw the exception.
-					if (options.SerializeThrowExceptions.HasFlag(RpcKeyValueSerializerExceptionOption.ThrowItemExceptions) == true) {
-						throw;
-					}
-				}
+		// Deserialize each item.
+		foreach (RpcMemberInfo item in items) {
+			try {
+				base.DeserializeMember<KeyValueType>(
+					item,
+					obj,
+					keyPrefix,
+					keyValueProvider,
+					level,
+					options
+				);
+			} catch (RpcKeyValueException exception) {
+				// Throw the exception.
+				exception.Throw(options);
 			}
 		}
 
