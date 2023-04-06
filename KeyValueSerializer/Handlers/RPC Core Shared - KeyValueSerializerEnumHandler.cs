@@ -1,11 +1,6 @@
 namespace RpcScandinavia.Core.Shared.KeyValueSerializer;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 
 #region RpcKeyValueSerializerEnumHandler
 //----------------------------------------------------------------------------------------------------------------------
@@ -168,6 +163,11 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 	//------------------------------------------------------------------------------------------------------------------
 	// Helper methods.
 	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Converts the string into a Int32, or a Int32 with a value of "-1" when the string is not a valid number.
+	/// </summary>
+	/// <param name="value">The value to convert.</param>
+	/// <returns>The number or -1.</returns>
 	private Int32 ToInt32OrDefault(String value) {
 		try {
 			return Int32.Parse(value);
@@ -176,6 +176,11 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 		}
 	} // ToInt32OrDefault
 
+	/// <summary>
+	/// Enumerates through all set values, of a enum type with the flags attribute.
+	/// </summary>
+	/// <param name="enumType">The enum type.</param>
+	/// <param name="enumValue">The enum value.</param>
 	private static IEnumerable<Object> GetEnumFlagValues(Type enumType, Object enumValue) {
 		foreach (Object obj in Enum.GetValues(enumType)) {
 			if (((Int32)obj & (Int32)enumValue) != 0) {
@@ -184,6 +189,12 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 		}
 	} // GetEnumFlagValues
 
+	/// <summary>
+	/// Set the specifig value on a enum type with the flags attribute.
+	/// </summary>
+	/// <param name="enumType">The enum type.</param>
+	/// <param name="enumValue">The enum value.</param>
+	/// <param name="enumFlag">The value that should be set.</param>
 	private static void SetEnumFlag(Type enumType, ref Object enumValue, Object enumFlag) {
 		// Int64 can hold all possible values, except those which UInt64 can hold.
 		if (Enum.GetUnderlyingType(enumType) == typeof(UInt64)) {

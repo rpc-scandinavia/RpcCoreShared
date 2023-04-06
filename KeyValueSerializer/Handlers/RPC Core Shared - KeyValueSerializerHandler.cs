@@ -183,37 +183,36 @@ public abstract class RpcKeyValueSerializerHandler {
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
 	protected void DeserializeMember<KeyValueType>(RpcMemberInfo memberInfo, Object obj, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Int32 level, RpcKeyValueSerializerOptions options) {
 		if (memberInfo.ShouldDeserialize(options) == true) {
-			if (keyValueProvider.GetCount(keyPrefix, memberInfo.Name) > 0) {
-Console.WriteLine($"MEMBER   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'   '{keyValueProvider.GetCount(keyPrefix, memberInfo.Name)}'");
-				Boolean deserialized = false;
+//Console.WriteLine($"MEMBER   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'   '{keyValueProvider.GetCount(keyPrefix, memberInfo.Name)}'");
+			Boolean deserialized = false;
 
-				// Deserialize using a converter.
-				if (deserialized == false) {
-					// Get the type from the meta data.
-					String metaTypeName = keyValueProvider.GetTypeMetadata(keyPrefix, memberInfo.Name);
-					Type metaType = (metaTypeName != null) ? Type.GetType(metaTypeName, false) ?? memberInfo.Type : memberInfo.Type;
+			// Deserialize using a converter.
+			if (deserialized == false) {
+				// Get the type from the meta data.
+				String metaTypeName = keyValueProvider.GetTypeMetadata(keyPrefix, memberInfo.Name);
+				Type metaType = (metaTypeName != null) ? Type.GetType(metaTypeName, false) ?? memberInfo.Type : memberInfo.Type;
 
-					RpcKeyValueSerializerConverter converter = RpcKeyValueSerializerConverter.GetConverter(metaType, options);
-					if (converter != null) {
-						// Get the member value.
-						String value = keyValueProvider.GetValue(keyPrefix, memberInfo.Name);
+				RpcKeyValueSerializerConverter converter = RpcKeyValueSerializerConverter.GetConverter(metaType, options);
+				if (converter != null) {
+					// Get the member value.
+					String value = keyValueProvider.GetValue(keyPrefix, memberInfo.Name);
 
-						// Set the member value.
-						memberInfo.SetValue(obj, converter.InternalDeserialize(value, options));
-						deserialized = true;
-					}
+					// Set the member value.
+					memberInfo.SetValue(obj, converter.InternalDeserialize(value, options));
+					deserialized = true;
 				}
+			}
 
-				// Deserialize using a handler.
-				if (deserialized == false) {
+			// Deserialize using a handler.
+			if (deserialized == false) {
+if ((keyValueProvider.GetCount(keyPrefix, memberInfo.Name) > 0) || (memberInfo.Type != typeof(Object))) {
 					RpcKeyValueSerializerHandler handler = RpcKeyValueSerializerHandler.GetHandler(memberInfo, options);
 					if (handler != null) {
 						// Get the new/empty member value.
 						// Create a new instance of the object, using the type taken from the meta data "$Type" value,
 						// or the member information.
 						Object value = this.CreateInstance<KeyValueType>(memberInfo, keyPrefix, keyValueProvider, memberInfo.GetValue(obj));
-if (value == null)Console.WriteLine($"  NULL   '{memberInfo.Type.FullName}'");
-if (value != null) {
+
 						// Set the member value.
 						memberInfo.SetValue(
 							obj,
@@ -226,15 +225,14 @@ if (value != null) {
 								options
 							)
 						);
-}
-						deserialized = true;
 					}
-				}
+}
+				deserialized = true;
+			}
 
-				// Undble to deserialize the member.
-				if (deserialized == false) {
-					throw new Exception($"Unable to deserialize member '{memberInfo.Name}' of type {memberInfo.Type.Name}.");
-				}
+			// Undble to deserialize the member.
+			if (deserialized == false) {
+				throw new Exception($"Unable to deserialize member '{memberInfo.Name}' of type {memberInfo.Type.Name}.");
 			}
 		}
 	} // DeserializeMember
@@ -251,7 +249,6 @@ if (value != null) {
 	protected Object CreateInstance<KeyValueType>(RpcMemberInfo memberInfo, String keyPrefix, RpcKeyValueProvider<KeyValueType> keyValueProvider, Object defaultValue) {
 		try {
 			// Get the type from the meta data.
-//			String metaTypeName = keyValueProvider.GetTypeMetadata(keyPrefix, String.Empty);
 			String metaTypeName = keyValueProvider.GetTypeMetadata(keyPrefix, memberInfo.Name);
 			Type metaType = (metaTypeName != null) ? Type.GetType(metaTypeName, false) ?? memberInfo.Type : memberInfo.Type;
 			return Activator.CreateInstance(metaType);

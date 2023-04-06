@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 #region RpcKeyValueSerializerObjectHandler
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,7 +80,7 @@ public class RpcKeyValueSerializerObjectHandler : RpcKeyValueSerializerHandler {
 		// Validate.
 //Console.WriteLine($"OBJECT   '{memberInfo.Name}'   '{memberInfo.Type.Name}'   '{obj?.GetType().Name}'   '{keyValueProvider.GetCount(keyPrefix, memberInfo.Name)}'");
 		RpcKeyValueException.ValidateLevel(level, options);
-//		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
+		RpcKeyValueException.ValidateIsAssignableFrom(memberInfo, obj);
 
 		// Special case, only on level zero (top level object).
 		// Create a new instance of the object, using the type taken from the meta data "$Type" value, or the member

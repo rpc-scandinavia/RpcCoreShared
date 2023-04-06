@@ -76,7 +76,12 @@ public class RpcKeyValueException : Exception {
 		}
 	} // ValidateLevel
 
-	public static void ValidateIsAssignableFrom(RpcMemberInfo memberInfo, Object obj) {
+	public static void ValidateIsAssignableFrom(RpcMemberInfo memberInfo, Object obj, Boolean throwOnNullObject = false) {
+		if ((throwOnNullObject == false) && (obj == null)) {
+			return;
+		}
+
+		// Validate that object can be assigned to the member information type.
 		if (memberInfo.Type.IsAssignableFrom(obj.GetType()) == false) {
 			throw new RpcKeyValueException(
 				$"The '{memberInfo.Type.Name}' type is not assignable from the '{obj.GetType().Name}' type.",
