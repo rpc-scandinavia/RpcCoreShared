@@ -50,7 +50,7 @@ It supports:
 The default `Equals` methods, compare the type name and the assembly name, but ignores the version, culture and public key.
 
 ```
-// Parse generic the Assembly Qualified Name.
+// Parse generic Assembly Qualified Name.
 RpcAssemblyQualifiedName aqn = new RpcAssemblyQualifiedName("System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e");
 
 // Create an instance of the generic type.
