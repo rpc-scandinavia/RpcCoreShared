@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RpcScandinavia.Core.Shared;
-using RpcScandinavia.Core.Shared.KeyValueSerializer;
 
 [TestClass]
 public class RpcKeyValueSerializerTests {
@@ -21,13 +20,22 @@ public class RpcKeyValueSerializerTests {
 		List<KeyValuePair<String, String>> result = this.GetTestResult().ToList();
 		DataA data = this.GetTestData();
 
+		// Setup the serializer options.
+		RpcKeyValueSerializerOptions keyValueSerializerOptions = new RpcKeyValueSerializerOptions();
+		keyValueSerializerOptions.SerializeTypeInfo = RpcKeyValueSerializerTypeInfoOption.Always;
+		keyValueSerializerOptions.SerializeEnums = RpcKeyValueSerializerEnumOption.AsInteger;
+		keyValueSerializerOptions.SerializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowAll;
+		keyValueSerializerOptions.DeserializeEnums = true;
+		keyValueSerializerOptions.DeserializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowAll;
+
 		// Serialize.
 		//List<KeyValuePair<String, String>> serialized = this.GetTestResult();
 		List<KeyValuePair<String, String>> serialized = RpcKeyValueSerializer.Serialize(data);
+		List<KeyValuePair<String, String>> serialized1 = RpcKeyValueSerializer.Serialize(data, keyValueSerializerOptions);
 
 File.WriteAllLines(
 	"/data/users/rpc@rpc-scandinavia.dk/Desktop/Linux/Serialized test.txt",
-	serialized
+	serialized1
 		.ConvertAll<String>((keyValue) => $"{keyValue.Key} = {keyValue.Value}")
 		.ToList()
 );
@@ -66,6 +74,62 @@ File.WriteAllLines(
 		// Assert.
 		Assert.AreEqual<DataA>(result, copy);
 	} // TestCopy
+
+	[TestMethod]
+	public void TestGetValues() {
+		// Get the test data.
+		DataA data = this.GetTestData();
+		List<KeyValuePair<String, String>> text = this.GetTestResult().ToList();
+
+		// Assert.
+		Assert.AreEqual<String>(
+			data.Text,
+			RpcKeyValueSerializer.GetMemberValue<String>(data, text[4].Key)
+		);
+		Assert.AreEqual<String>(
+			((DataA)data.Tag).Text,
+			RpcKeyValueSerializer.GetMemberValue<String>(data, text[30].Key)
+		);
+
+		Assert.AreEqual<String>(
+			data.Comments[2].Value,
+			RpcKeyValueSerializer.GetMemberValue<String>(data, text[7].Key)
+		);
+		Assert.AreEqual<String>(
+			((DataA)data.Tag).Comments[2].Value,
+			RpcKeyValueSerializer.GetMemberValue<String>(data, text[33].Key)
+		);
+
+		Assert.AreEqual<Boolean>(
+			data.EnumB.HasFlag(DataEnumB.Bravo),
+			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[22].Key)
+		);
+		Assert.AreEqual<Boolean>(
+			((DataA)data.Tag).EnumB.HasFlag(DataEnumB.Charlie),
+			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[49].Key)
+		);
+
+	} // TestGetValues
+
+	[TestMethod]
+	public void TestSetValues() {
+		// Get the test data.
+		DataA data = this.GetTestData();
+		List<KeyValuePair<String, String>> text = this.GetTestResult().ToList();
+
+		// Assert.
+		RpcKeyValueSerializer.SetMemberValue(data, text[4].Key, "qwerty");
+		Assert.AreEqual<String>("qwerty", data.Text);
+
+		RpcKeyValueSerializer.SetMemberValue(data, text[7].Key, "qwerty");
+		Assert.AreEqual<String>("qwerty", data.Comments[2].Value);
+
+		for (Int32 index = 1000; index < 6000; index++) {
+			RpcKeyValueSerializer.SetMemberValue(data, text[6].Key, $"qwerty {index}");
+			Assert.AreEqual<String>($"qwerty {index}", data.Comments[1].Value);
+		}
+
+	} // TestSetValues
 
 	public DataA GetTestData(Boolean repeatAsTag = true) {
 		return new DataA(
@@ -134,8 +198,14 @@ File.WriteAllLines(
 			new KeyValuePair<String, String>("Mappings:999.99:Value", "999"),
 
 			new KeyValuePair<String, String>("EnumA", "2"),
-			new KeyValuePair<String, String>("EnumB:0", "2"),
-			new KeyValuePair<String, String>("EnumB:1", "8"),
+//			new KeyValuePair<String, String>("EnumB:0", "2"),
+//			new KeyValuePair<String, String>("EnumB:1", "8"),
+			new KeyValuePair<String, String>("EnumB:0", "True"),
+			new KeyValuePair<String, String>("EnumB:1", "False"),
+			new KeyValuePair<String, String>("EnumB:2", "True"),
+			new KeyValuePair<String, String>("EnumB:4", "False"),
+			new KeyValuePair<String, String>("EnumB:8", "True"),
+			new KeyValuePair<String, String>("EnumB:16", "False"),
 
 			new KeyValuePair<String, String>("Tag:$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Tag:Id", "1234"),
@@ -161,8 +231,14 @@ File.WriteAllLines(
 			new KeyValuePair<String, String>("Tag:Mappings:999.99:Value", "999"),
 
 			new KeyValuePair<String, String>("Tag:EnumA", "2"),
-			new KeyValuePair<String, String>("Tag:EnumB:0", "2"),
-			new KeyValuePair<String, String>("Tag:EnumB:1", "8"),
+//			new KeyValuePair<String, String>("Tag:EnumB:0", "2"),
+//			new KeyValuePair<String, String>("Tag:EnumB:1", "8"),
+			new KeyValuePair<String, String>("Tag:EnumB:0", "True"),
+			new KeyValuePair<String, String>("Tag:EnumB:1", "False"),
+			new KeyValuePair<String, String>("Tag:EnumB:2", "True"),
+			new KeyValuePair<String, String>("Tag:EnumB:4", "False"),
+			new KeyValuePair<String, String>("Tag:EnumB:8", "True"),
+			new KeyValuePair<String, String>("Tag:EnumB:16", "False"),
 
 		};
 	} // GetTestResult
@@ -224,9 +300,9 @@ public class DataA : IEqualityComparer<DataA> {
 		Debug.WriteLine($"     Guid:  {(valueA.Guid.Equals(valueB.Guid))}");
 		Debug.WriteLine($"     Time:  {(valueA.Time.Equals(valueB.Time))}");
 		Debug.WriteLine($"     Text:  {(valueA.Text.Equals(valueB.Text))}");
-		Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}");
-		Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}");
-		Debug.WriteLine($" Mappings:  {(valueA.Mappings.SequenceEqual(valueB.Mappings))}");
+		Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}     {valueA.Comments?.Count} / {valueB.Comments?.Count}");
+		Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}     {valueA.Abstracts?.Length} / {valueB.Abstracts?.Length}");
+		Debug.WriteLine($" Mappings:  {(valueA.Mappings.SequenceEqual(valueB.Mappings))}     {valueA.Mappings?.Count} / {valueB.Mappings?.Count}");
 		Debug.WriteLine($"    EnumA:  {(valueA.EnumA.Equals(valueB.EnumA))}");
 		Debug.WriteLine($"    EnumB:  {(valueA.EnumB.Equals(valueB.EnumB))}");
 		Debug.WriteLine($"      Tag:  {(valueA.Tag.EqualsForObjects(valueB.Tag))}");
