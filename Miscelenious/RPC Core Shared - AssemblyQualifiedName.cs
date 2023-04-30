@@ -168,7 +168,6 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 			Int32 numberIndex = index;
 			Int32 numberLength = 0;
 			while (index < this.assemblyQualifiedName.Length) {
-//Console.WriteLine($"Current index: {index}   Char: '{this.assemblyQualifiedName.Span[index]}'   <number>");
 				if ((this.assemblyQualifiedName.Span[index] == Char0) ||
 					(this.assemblyQualifiedName.Span[index] == Char1) ||
 					(this.assemblyQualifiedName.Span[index] == Char2) ||
@@ -236,7 +235,6 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 
 			// Get the array dimensions.
 			while (index < this.assemblyQualifiedName.Length) {
-//Console.WriteLine($"Current index: {index}   Char: '{this.assemblyQualifiedName.Span[index]}'   ***");
 				if (this.assemblyQualifiedName.Span[index] == CharSeparator) {
 					// Found array dimmension.
 					this.isArray++;
@@ -285,7 +283,6 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 
 		// Set the length of the parsed text.
 		this.indexLength = partIndex + partLength - this.indexBegin;
-//Console.WriteLine($"Finished parsing: '{this.assemblyQualifiedName.Slice(this.indexBegin, this.indexLength)}'   Index: {this.indexBegin}   Length: {this.indexLength}");
 	} // Parse
 
 	private (Int32 partIndex, Int32 partLength, Char exitChar) ParsePart(ref Int32 index, String prefix, Char exitOnChar0, Char exitOnChar1, Char exitOnChar2) {
@@ -295,7 +292,6 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 			Int32 partLength = 0;
 			Char exitChar = Char.MinValue;
 			while ((index < this.assemblyQualifiedName.Length) && (exitChar == Char.MinValue)) {
-//Console.WriteLine($"Current index: {index}   Char: '{this.assemblyQualifiedName.Span[index]}'");
 				if ((this.assemblyQualifiedName.Span[index] == exitOnChar0) ||
 					(this.assemblyQualifiedName.Span[index] == exitOnChar1) ||
 					(this.assemblyQualifiedName.Span[index] == exitOnChar2)) {
@@ -324,7 +320,6 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	private void ParseTrim(ref Int32 index, Char trimChar) {
 		// Iterate whitespace characters.
 		while ((index < this.assemblyQualifiedName.Length) && (this.assemblyQualifiedName.Span[index] == trimChar)) {
-//Console.WriteLine($"Current index: {index}   Char: '{this.assemblyQualifiedName.Span[index]}'   <trim>");
 			// Iterate.
 			index++;
 		}
@@ -573,13 +568,13 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 
 				// Create the generic type.
 				if ((this.isGeneric == true) && (this.genericTypeArguments.Length > 0)) {
-					Type[] genericTypes = new Type[this.genericTypeArguments.Length];
-					for (Int32 genericIndex = 0; genericIndex < this.genericTypeArguments.Length; genericIndex++) {
-						genericTypes[genericIndex] = this.genericTypeArguments[genericIndex].Type;
-					}
-					// TODO: Create and use cache.
 					type = this.GetGenericBaseType();
-					type = type.MakeGenericType(genericTypes);
+					type = type.MakeGenericType(
+						this.genericTypeArguments
+							.ToList()
+							.ConvertAll<Type>((genericTypeArgument) => genericTypeArgument.Type)
+							.ToArray()
+					);
 				}
 
 				// Create the normal type.

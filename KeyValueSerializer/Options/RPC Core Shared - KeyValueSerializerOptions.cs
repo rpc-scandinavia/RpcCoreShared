@@ -57,6 +57,7 @@ public class RpcKeyValueSerializerOptions {
 		this.converters.Add(new RpcKeyValueSerializerConverterTimeOnly());
 		this.converters.Add(new RpcKeyValueSerializerConverterGuid());
 		this.converters.Add(new RpcKeyValueSerializerConverterString());
+		this.converters.Add(new RpcKeyValueSerializerConverterEnum());
 
 		// Add extra build-in converters.
 		// They are not included in the GitHub code.

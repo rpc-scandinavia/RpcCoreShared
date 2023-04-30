@@ -18,7 +18,7 @@ public class RpcKeyValueSerializerConverterDateTime : RpcKeyValueSerializerConve
 	} // Serialize
 
 	/// <inheritdoc />
-	public override DateTime Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override DateTime Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return DateTime.Parse(value, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
 	} // Deserialize
 

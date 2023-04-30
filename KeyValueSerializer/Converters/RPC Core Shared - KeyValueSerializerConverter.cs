@@ -57,9 +57,10 @@ public abstract class RpcKeyValueSerializerConverter {
 	/// Deserializes a string to a object of the type this converter can deserialize to.
 	/// </summary>
 	/// <param name="value">The string.</param>
+	/// <param name="type">The preferred type.</param>
 	/// <param name="options">The serializer options.</param>
 	/// <returns>The string deserialized to a value object.</returns>
-	internal abstract Object InternalDeserialize(String value, RpcKeyValueSerializerOptions options);
+	internal abstract Object InternalDeserialize(String value, Type type, RpcKeyValueSerializerOptions options);
 	#endregion
 
 } // RpcKeyValueSerializerConverter
@@ -116,8 +117,8 @@ public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerC
 	} // InternalSerialize
 
 	/// <inheritdoc />
-	internal override Object InternalDeserialize(String value, RpcKeyValueSerializerOptions options) {
-		return this.Deserialize(value, options);
+	internal override Object InternalDeserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
+		return this.Deserialize(value, type, options);
 	} // InternalDeserialize
 	#endregion
 
@@ -137,9 +138,10 @@ public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerC
 	/// Deserialize (parse) the string value into a T object.
 	/// </summary>
 	/// <param name="value">The string value.</param>
+	/// <param name="type">The preferred type.</param>
 	/// <param name="options">The serializer options.</param>
 	/// <returns>The object.</returns>
-	public abstract T Deserialize(String value, RpcKeyValueSerializerOptions options);
+	public abstract T Deserialize(String value, Type type, RpcKeyValueSerializerOptions options);
 	#endregion
 
 	#region Multiple strings helper methods

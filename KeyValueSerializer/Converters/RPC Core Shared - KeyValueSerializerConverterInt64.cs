@@ -17,7 +17,7 @@ public class RpcKeyValueSerializerConverterInt64 : RpcKeyValueSerializerConverte
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Int64 Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override Int64 Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return Int64.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
 	} // Deserialize
 

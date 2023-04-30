@@ -33,7 +33,7 @@ public class RpcKeyValueSerializerConverterCultureInfo : RpcKeyValueSerializerCo
 	/// <param name="value">The string value.</param>
 	/// <param name="options">The options.</param>
 	/// <returns>The string value converted into a culture information.</returns>
-	public override CultureInfo Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override CultureInfo Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		try {
 			return new CultureInfo(value);
 		} catch {

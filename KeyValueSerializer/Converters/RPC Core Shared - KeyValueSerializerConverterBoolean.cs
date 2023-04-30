@@ -16,7 +16,7 @@ public class RpcKeyValueSerializerConverterBoolean : RpcKeyValueSerializerConver
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Boolean Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override Boolean Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return Boolean.Parse(value);
 	} // Deserialize
 

@@ -35,7 +35,7 @@ public class RpcKeyValueSerializerTests {
 
 File.WriteAllLines(
 	"/data/users/rpc@rpc-scandinavia.dk/Desktop/Linux/Serialized test.txt",
-	serialized1
+	serialized
 		.ConvertAll<String>((keyValue) => $"{keyValue.Key} = {keyValue.Value}")
 		.ToList()
 );
@@ -88,7 +88,7 @@ File.WriteAllLines(
 		);
 		Assert.AreEqual<String>(
 			((DataA)data.Tag).Text,
-			RpcKeyValueSerializer.GetMemberValue<String>(data, text[30].Key)
+			RpcKeyValueSerializer.GetMemberValue<String>(data, text[36].Key)
 		);
 
 		Assert.AreEqual<String>(
@@ -97,16 +97,16 @@ File.WriteAllLines(
 		);
 		Assert.AreEqual<String>(
 			((DataA)data.Tag).Comments[2].Value,
-			RpcKeyValueSerializer.GetMemberValue<String>(data, text[33].Key)
+			RpcKeyValueSerializer.GetMemberValue<String>(data, text[39].Key)
 		);
 
 		Assert.AreEqual<Boolean>(
 			data.EnumB.HasFlag(DataEnumB.Bravo),
-			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[22].Key)
+			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[28].Key)
 		);
 		Assert.AreEqual<Boolean>(
 			((DataA)data.Tag).EnumB.HasFlag(DataEnumB.Charlie),
-			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[49].Key)
+			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[61].Key)
 		);
 
 	} // TestGetValues
@@ -161,6 +161,20 @@ File.WriteAllLines(
 				{ 999.99, new DataGeneric<Int16>(999) }
 			},
 
+			// Guid list.
+			new List<Guid>() {
+				new Guid("00000000-0000-0000-0000-000000000000"),
+				new Guid("10000000-0000-0000-0000-000000000001"),
+				new Guid("20000000-0000-0000-0000-000000000002")
+			},
+
+			// Guid array.
+			new Guid[] {
+				new Guid("10000000-0000-0000-0000-000000000010"),
+				new Guid("11000000-0000-0000-0000-000000000011"),
+				new Guid("12000000-0000-0000-0000-000000000012")
+			},
+
 			// Enum.
 			DataEnumA.Two,
 
@@ -197,6 +211,14 @@ File.WriteAllLines(
 			new KeyValuePair<String, String>("Mappings:531.03:Value", "331"),
 			new KeyValuePair<String, String>("Mappings:999.99:Value", "999"),
 
+			new KeyValuePair<String, String>("GuidList:0", "00000000-0000-0000-0000-000000000000"),
+			new KeyValuePair<String, String>("GuidList:1", "10000000-0000-0000-0000-000000000001"),
+			new KeyValuePair<String, String>("GuidList:2", "20000000-0000-0000-0000-000000000002"),
+
+			new KeyValuePair<String, String>("GuidArray:0", "10000000-0000-0000-0000-000000000010"),
+			new KeyValuePair<String, String>("GuidArray:1", "11000000-0000-0000-0000-000000000011"),
+			new KeyValuePair<String, String>("GuidArray:2", "12000000-0000-0000-0000-000000000012"),
+
 			new KeyValuePair<String, String>("EnumA", "2"),
 //			new KeyValuePair<String, String>("EnumB:0", "2"),
 //			new KeyValuePair<String, String>("EnumB:1", "8"),
@@ -230,6 +252,14 @@ File.WriteAllLines(
 			new KeyValuePair<String, String>("Tag:Mappings:531.03:Value", "331"),
 			new KeyValuePair<String, String>("Tag:Mappings:999.99:Value", "999"),
 
+			new KeyValuePair<String, String>("Tag:GuidList:0", "00000000-0000-0000-0000-000000000000"),
+			new KeyValuePair<String, String>("Tag:GuidList:1", "10000000-0000-0000-0000-000000000001"),
+			new KeyValuePair<String, String>("Tag:GuidList:2", "20000000-0000-0000-0000-000000000002"),
+
+			new KeyValuePair<String, String>("Tag:GuidArray:0", "10000000-0000-0000-0000-000000000010"),
+			new KeyValuePair<String, String>("Tag:GuidArray:1", "11000000-0000-0000-0000-000000000011"),
+			new KeyValuePair<String, String>("Tag:GuidArray:2", "12000000-0000-0000-0000-000000000012"),
+
 			new KeyValuePair<String, String>("Tag:EnumA", "2"),
 //			new KeyValuePair<String, String>("Tag:EnumB:0", "2"),
 //			new KeyValuePair<String, String>("Tag:EnumB:1", "8"),
@@ -253,6 +283,8 @@ public class DataA : IEqualityComparer<DataA> {
 	public List<DataGeneric<String>> Comments { get; set; }
 	public DataAbstract[] Abstracts { get; set; }
 	public Dictionary<Double, DataGeneric<Int16>> Mappings { get; set; }
+	public List<Guid> GuidList { get; set; }
+	public Guid[] GuidArray { get; set; }
 	public DataEnumA EnumA { get; set; }
 	public DataEnumB EnumB { get; set; }
 	public Object Tag { get; set; }
@@ -265,6 +297,8 @@ public class DataA : IEqualityComparer<DataA> {
 		this.Comments = new List<DataGeneric<String>>();
 		this.Abstracts = new DataAbstract[0];
 		this.Mappings = new Dictionary<Double, DataGeneric<Int16>>();
+		this.GuidList = new List<Guid>();
+		this.GuidArray = new Guid[0];
 		this.EnumA = DataEnumA.None;
 		this.EnumB = DataEnumB.None;
 		this.Tag = null;
@@ -272,7 +306,7 @@ public class DataA : IEqualityComparer<DataA> {
 
 	//public DataA(Int32 id, Guid guid, DateTime time, String text, Object tag) {
 	//public DataA(Int32 id, Guid guid, DateTime time, String text, DataGeneric<String>[] comments, Object tag) {
-	public DataA(Int32 id, Guid guid, DateTime time, String text, DataGeneric<String>[] comments, DataAbstract[] abstracts, Dictionary<Double, DataGeneric<Int16>> mappings, DataEnumA enumA, DataEnumB enumB, Object tag) {
+	public DataA(Int32 id, Guid guid, DateTime time, String text, DataGeneric<String>[] comments, DataAbstract[] abstracts, Dictionary<Double, DataGeneric<Int16>> mappings, List<Guid> guidList, Guid[] guidArray, DataEnumA enumA, DataEnumB enumB, Object tag) {
 		this.Id = id;
 		this.Guid = guid;
 		this.Time = time;
@@ -281,6 +315,8 @@ public class DataA : IEqualityComparer<DataA> {
 		this.Comments.AddRange(comments);
 		this.Abstracts = abstracts;
 		this.Mappings = mappings;
+		this.GuidList = guidList;
+		this.GuidArray = guidArray;
 		this.EnumA = enumA;
 		this.EnumB = enumB;
 		this.Tag = tag;
@@ -303,6 +339,8 @@ public class DataA : IEqualityComparer<DataA> {
 		Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}     {valueA.Comments?.Count} / {valueB.Comments?.Count}");
 		Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}     {valueA.Abstracts?.Length} / {valueB.Abstracts?.Length}");
 		Debug.WriteLine($" Mappings:  {(valueA.Mappings.SequenceEqual(valueB.Mappings))}     {valueA.Mappings?.Count} / {valueB.Mappings?.Count}");
+		Debug.WriteLine($"   Guid L:  {(valueA.GuidList.SequenceEqual(valueB.GuidList))}     {valueA.GuidList?.Count} / {valueB.GuidList?.Count}");
+		Debug.WriteLine($"   Guid L:  {(valueA.GuidArray.SequenceEqual(valueB.GuidArray))}     {valueA.GuidArray?.Length} / {valueB.GuidArray?.Length}");
 		Debug.WriteLine($"    EnumA:  {(valueA.EnumA.Equals(valueB.EnumA))}");
 		Debug.WriteLine($"    EnumB:  {(valueA.EnumB.Equals(valueB.EnumB))}");
 		Debug.WriteLine($"      Tag:  {(valueA.Tag.EqualsForObjects(valueB.Tag))}");
@@ -315,6 +353,8 @@ public class DataA : IEqualityComparer<DataA> {
 			(valueA.Comments.SequenceEqual(valueB.Comments)) &&
 			(valueA.Abstracts.SequenceEqual(valueB.Abstracts)) &&
 			(valueA.Mappings.SequenceEqual(valueB.Mappings)) &&
+			(valueA.GuidList.SequenceEqual(valueB.GuidList)) &&
+			(valueA.GuidArray.SequenceEqual(valueB.GuidArray)) &&
 			(valueA.EnumA.Equals(valueB.EnumA)) &&
 			(valueA.EnumB.Equals(valueB.EnumB)) &&
 			(valueA.Tag.EqualsForObjects(valueB.Tag))
@@ -330,6 +370,8 @@ public class DataA : IEqualityComparer<DataA> {
 			value.Comments,
 			value.Abstracts,
 			value.Mappings,
+//			value.GuidList,
+//			this.GuidArray,
 //			value.EnumA,
 //			value.EnumB,
 			value.Tag

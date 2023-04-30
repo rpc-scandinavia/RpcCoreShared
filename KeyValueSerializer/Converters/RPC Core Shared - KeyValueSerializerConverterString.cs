@@ -17,7 +17,7 @@ public class RpcKeyValueSerializerConverterString : RpcKeyValueSerializerConvert
 	} // Serialize
 
 	/// <inheritdoc />
-	public override String Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override String Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return value.NotNull();
 	} // Deserialize
 

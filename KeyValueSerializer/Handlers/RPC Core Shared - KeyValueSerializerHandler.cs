@@ -18,7 +18,7 @@ public abstract class RpcKeyValueSerializerHandler {
 		new RpcKeyValueSerializerArrayHandler(),
 		new RpcKeyValueSerializerDictionaryHandler(),
 		new RpcKeyValueSerializerEnumWithFlagsHandler(),
-		new RpcKeyValueSerializerEnumHandler(),
+		//new RpcKeyValueSerializerEnumHandler(),						// Moved to a converter.
 		new RpcKeyValueSerializerObjectHandler()						// Must be the last handler.
 	};
 
@@ -263,7 +263,7 @@ public abstract class RpcKeyValueSerializerHandler {
 						String value = keyValueProvider.GetValue(keyPath, memberInfo.Name);
 
 						// Set the member value.
-						memberInfo.SetValue(obj, converter.InternalDeserialize(value, options));
+						memberInfo.SetValue(obj, converter.InternalDeserialize(value, metaType, options));
 						deserialized = true;
 					}
 				}
@@ -325,26 +325,20 @@ if ((keyValueProvider.GetCount(keyPath, memberInfo.Name) > 0) || (memberInfo.Typ
 			// Get the type from the meta data.
 			RpcAssemblyQualifiedName metaTypeName = new RpcAssemblyQualifiedName(keyValueProvider.GetTypeMetadata(keyPath, memberInfo.Name));
 			Type metaType = metaTypeName?.Type ??  memberInfo.Type;
-//Console.WriteLine($"   Type: '{metaType?.Name}'");
 
 			if (metaType != null) {
 				if ((defaultValue != null) && (metaType.IsAssignableFrom(defaultValue.GetType()) == true)) {
 					// Return the default value.
-//Console.WriteLine($"   Return Default 1");
 					return defaultValue;
 				} else {
 					// Create new instance.
-//Console.WriteLine($"   Return New Instance");
 					return Activator.CreateInstance(metaType);
 				}
 			}
 
-//Console.WriteLine($"   Return Default 2");
 			return defaultValue;
 		} catch (Exception e) {
 			// Return the default value.
-//Console.WriteLine($"   Exception: {e.Message}");
-//Console.WriteLine($"   Return Default 3");
 			return defaultValue;
 		}
 	} // CreateInstance

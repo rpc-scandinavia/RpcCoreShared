@@ -18,7 +18,7 @@ public class RpcKeyValueSerializerConverterTimeOnly : RpcKeyValueSerializerConve
 	} // Serialize
 
 	/// <inheritdoc />
-	public override TimeOnly Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override TimeOnly Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return TimeOnly.Parse(value, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
 	} // Deserialize
 

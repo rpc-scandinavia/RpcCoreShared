@@ -17,7 +17,7 @@ public class RpcKeyValueSerializerConverterDecimal : RpcKeyValueSerializerConver
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Decimal Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override Decimal Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return Decimal.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
 	} // Deserialize
 

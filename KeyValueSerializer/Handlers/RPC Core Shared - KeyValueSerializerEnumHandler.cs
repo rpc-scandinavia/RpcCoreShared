@@ -34,7 +34,7 @@ public class RpcKeyValueSerializerEnumHandler : RpcKeyValueSerializerHandler {
 		// Convert the item to either a integer or a string.
 		switch (options.SerializeEnums) {
 			case RpcKeyValueSerializerEnumOption.AsInteger:
-				obj = ((Int32)obj).ToString();
+				obj = Convert.ToInt64(obj).ToString();	//((Int32)obj).ToString();
 				break;
 			case RpcKeyValueSerializerEnumOption.AsString:
 				obj = Enum.GetName(memberInfo.Type, obj).NotNull();

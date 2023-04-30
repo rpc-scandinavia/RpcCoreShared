@@ -17,7 +17,7 @@ public class RpcKeyValueSerializerConverterSByte : RpcKeyValueSerializerConverte
 	} // Serialize
 
 	/// <inheritdoc />
-	public override SByte Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override SByte Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return SByte.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
 	} // Deserialize
 

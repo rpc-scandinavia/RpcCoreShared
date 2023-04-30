@@ -138,7 +138,7 @@ public class RpcKeyValueSerializerDictionaryHandler : RpcKeyValueSerializerHandl
 		foreach (String itemKey in keyValueProvider.GetKeys(keyPath)) {
 			try {
 				// Get the key.
-				Object key = keyConverter.InternalDeserialize(itemKey, options);
+				Object key = keyConverter.InternalDeserialize(itemKey, keyType, options);
 
 				// Get the member information for the current item.
 				RpcMemberInfo member = new RpcMemberInfoType(

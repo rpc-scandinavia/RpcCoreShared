@@ -18,7 +18,7 @@ public class RpcKeyValueSerializerConverterDateOnly : RpcKeyValueSerializerConve
 	} // Serialize
 
 	/// <inheritdoc />
-	public override DateOnly Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override DateOnly Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return DateOnly.Parse(value, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
 	} // Deserialize
 

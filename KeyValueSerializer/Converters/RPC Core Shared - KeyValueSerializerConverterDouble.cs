@@ -17,7 +17,7 @@ public class RpcKeyValueSerializerConverterDouble : RpcKeyValueSerializerConvert
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Double Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override Double Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return Double.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
 	} // Deserialize
 

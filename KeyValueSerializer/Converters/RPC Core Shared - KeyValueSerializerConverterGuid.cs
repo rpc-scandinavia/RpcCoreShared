@@ -16,7 +16,7 @@ public class RpcKeyValueSerializerConverterGuid : RpcKeyValueSerializerConverter
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Guid Deserialize(String value, RpcKeyValueSerializerOptions options) {
+	public override Guid Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
 		return Guid.Parse(value);
 	} // Deserialize
 
