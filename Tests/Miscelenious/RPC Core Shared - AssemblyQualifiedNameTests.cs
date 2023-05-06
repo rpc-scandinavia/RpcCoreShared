@@ -195,10 +195,15 @@ public class RpcAssemblyQualifiedNameTests {
 		RpcAssemblyQualifiedName aqn3 = new RpcAssemblyQualifiedName("System.Guid, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=FALSE");
 		RpcAssemblyQualifiedName aqn4 = new RpcAssemblyQualifiedName("System.Guid, System.Private.CoreLib, Version=1.2.3, Culture=neutral, PublicKeyToken=7cec85d7bea7798e");
 
-		// They are equal because the default is to ignore the version, culture and public key.
-		Assert.AreEqual(aqn1, aqn2);
-		Assert.AreEqual(aqn1, aqn3);
-		Assert.AreEqual(aqn1, aqn4);
+		// Normal.
+		Assert.AreNotEqual(aqn1, aqn2);
+		Assert.AreNotEqual(aqn1, aqn3);
+		Assert.AreNotEqual(aqn1, aqn4);
+
+		// Ignore the version, culture and public key.
+		Assert.AreEqual(aqn1, aqn2, new RpcAssemblyQualifiedNameEqualityComparer(true, true, true));
+		Assert.AreEqual(aqn1, aqn3, new RpcAssemblyQualifiedNameEqualityComparer(true, true, true));
+		Assert.AreEqual(aqn1, aqn4, new RpcAssemblyQualifiedNameEqualityComparer(true, true, true));
 
 	} // TestAssemblyQualifiedNameEquals
 

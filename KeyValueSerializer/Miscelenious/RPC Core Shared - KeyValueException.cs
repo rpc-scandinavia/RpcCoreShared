@@ -66,87 +66,44 @@ public class RpcKeyValueException : Exception {
 	/// </summary>
 	/// <param name="keyPath">The path to the serialized keys.</param>
 	/// <param name="options">The serializer options.</param>
-	public static void ValidateLevel(String keyPath, RpcKeyValueSerializerOptions options) {
+	public static void ValidateLevel(ReadOnlySpan<Char> keyPath, RpcKeyValueSerializerOptions options) {
 		// Validate level.
-		if (keyPath.Count((ch) => (ch == options.HierarchySeparatorChar)) > options.MaxDepth) {
-			throw new RpcKeyValueException(
-				$"The configured maximum depth of '{options.MaxDepth}' has been reached.",
-				RpcKeyValueExceptionType.Item
-			);
+		Int32 level = 0;
+		foreach (Char ch in keyPath) {
+			if (ch == options.HierarchySeparatorChar) {
+				// Increase level.
+				level++;
+
+				// Validate level.
+				if (level > options.MaxDepth) {
+					throw new RpcKeyValueException(
+						$"The configured maximum depth of '{options.MaxDepth}' has been reached.",
+						RpcKeyValueExceptionType.Item
+					);
+				}
+			}
 		}
 	} // ValidateLevel
 
 	/// <summary>
-	/// Throws an exception if the object cannot be assigned to the member information type.
+	/// Throws an exception if the object cannot be assigned to the type.
 	/// </summary>
-	/// <param name="memberInfo">The member information.</param>
+	/// <param name="type">The type.</param>
 	/// <param name="obj">The object.</param>
 	/// <param name="throwOnNullObject">Specify to throw an exception when the object is null.</param>
-	public static void ValidateIsAssignableFrom(RpcMemberInfo memberInfo, Object obj, Boolean throwOnNullObject = false) {
+	public static void ValidateIsAssignableFrom(Type type, Object obj, Boolean throwOnNullObject = false) {
 		if ((throwOnNullObject == false) && (obj == null)) {
 			return;
 		}
 
 		// Validate that object can be assigned to the member information type.
-		if (memberInfo.Type.IsAssignableFrom(obj.GetType()) == false) {
+		if (type.IsAssignableFrom(obj.GetType()) == false) {
 			throw new RpcKeyValueException(
-				$"The '{memberInfo.Type.Name}' type is not assignable from the '{obj.GetType().Name}' type.",
+				$"The '{type.Name}' type is not assignable from the '{obj.GetType().Name}' type.",
 				RpcKeyValueExceptionType.Item
 			);
 		}
 	} // ValidateIsAssignableFrom
-
-	/// <summary>
-	/// Throws an exception if the member information is not of a generic list.
-	/// </summary>
-	/// <param name="memberInfo">The member information.</param>
-	public static void ValidateIsGenericList(RpcMemberInfo memberInfo) {
-		if (memberInfo.IsGenericList == false) {
-			throw new RpcKeyValueException(
-				$"The '{memberInfo.Type.Name}' type is not a generic list.",
-				RpcKeyValueExceptionType.Item
-			);
-		}
-	} // ValidateIsGenericList
-
-	/// <summary>
-	/// Throws an exception if the member information is not of an array.
-	/// </summary>
-	/// <param name="memberInfo">The member information.</param>
-	public static void ValidateIsArray(RpcMemberInfo memberInfo) {
-		if (memberInfo.IsArray == false) {
-			throw new RpcKeyValueException(
-				$"The '{memberInfo.Type.Name}' type is not an array.",
-				RpcKeyValueExceptionType.Item
-			);
-		}
-	} // ValidateIsArray
-
-	/// <summary>
-	/// Throws an exception if the member information is not of a generic dictionary.
-	/// </summary>
-	/// <param name="memberInfo">The member information.</param>
-	public static void ValidateIsGenericDictionary(RpcMemberInfo memberInfo) {
-		if (memberInfo.IsGenericDictionary == false) {
-			throw new RpcKeyValueException(
-				$"The '{memberInfo.Type.Name}' type is not a generic dictionary.",
-				RpcKeyValueExceptionType.Item
-			);
-		}
-	} // ValidateIsGenericDictionary
-
-	/// <summary>
-	/// Throws an exception if the member information is not of a enum or a enum with flag attribute.
-	/// </summary>
-	/// <param name="memberInfo">The member information.</param>
-	public static void ValidateIsEnum(RpcMemberInfo memberInfo) {
-		if (memberInfo.IsEnum == false) {
-			throw new RpcKeyValueException(
-				$"The '{memberInfo.Type.Name}' type is not a enum.",
-				RpcKeyValueExceptionType.Item
-			);
-		}
-	} // ValidateIsEnum
 
 } // RpcKeyValueException
 #endregion

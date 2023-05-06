@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 #region RpcAssemblyQualifiedName
 //----------------------------------------------------------------------------------------------------------------------
@@ -13,7 +14,7 @@ using System.Reflection;
 /// This is a Assembly Qualified Name parser.
 /// It uses a <see cref="System.Memory{System.Char}" /> to parse the Assembly Qualified Name.
 /// </summary>
-public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedName>, IEqualityComparer<RpcAssemblyQualifiedName> {
+public class RpcAssemblyQualifiedName {
 	private const Char Char0 = '0';
 	private const Char Char1 = '1';
 	private const Char Char2 = '2';
@@ -34,6 +35,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	private const String StrVersion = "Version=";
 	private const String StrCulture = "Culture=";
 	private const String StrPublicKeyToken = "PublicKeyToken=";
+	private const String StrPublicKeyTokenEmpty = "null";
 
 	private ReadOnlyMemory<Char> assemblyQualifiedName;
 	private ReadOnlyMemory<Char> typePart;
@@ -47,6 +49,8 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 
 	private Int32 indexBegin;
 	private Int32 indexLength;
+
+	private static RpcTypeCache typeCache = new RpcTypeCache();
 
 	#region Constructors
 	//------------------------------------------------------------------------------------------------------------------
@@ -105,6 +109,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 		// Parse.
 		this.indexBegin = indexBegin;
 		this.indexLength = 0;
+
 		this.Parse();
 	} // RpcAssemblyQualifiedName
 	#endregion
@@ -122,6 +127,9 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 		//		RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
 		//		System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
 		//
+		// Strange examples:
+		//		System.Array+EmptyArray`1, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
+		//
 		// The Assembly Qualified Name contains five parts of information:
 		//		System.Guid, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
 		//		0            1                       2                3                4
@@ -130,7 +138,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 		//		1 = Assembly name.
 		//		2 = Assembly version.
 		//		3 = Assembly culture.
-		//		4 = Assembly public signature key.
+		//		4 = Assembly public key token.
 		//
 
 		// Parse the Assembly Qualified Name:
@@ -140,7 +148,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 		// 3)	Find the end of the assembly name (optional).
 		// 4)	Find the end of the assembly version (optional).
 		// 5)	Find the end of the assembly culture (optional).
-		// 6)	Find the end of the assembly public signature key (optional).
+		// 6)	Find the end of the assembly public key token (optional).
 
 		Int32 index = this.indexBegin;
 		Int32 partIndex = 0;
@@ -165,6 +173,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 		// 2a.
 		if (this.isGeneric == true) {
 			// Get the number of generic type arguments.
+			Boolean beginGenericFound = false;
 			Int32 numberIndex = index;
 			Int32 numberLength = 0;
 			while (index < this.assemblyQualifiedName.Length) {
@@ -185,39 +194,54 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 					index++;
 				} else if (this.assemblyQualifiedName.Span[index] == CharBeginGeneric) {
 					// Found generic type.
+					beginGenericFound = true;
+
+					// Iterate.
+					index++;
+
+					break;
+				} else if (this.assemblyQualifiedName.Span[index] == CharSeparator) {
+					// Missing generic arguments.
+					beginGenericFound = false;
+
 					// Iterate.
 					index++;
 
 					break;
 				} else {
-					throw new Exception($"Expected generic type parameter count.");
+					// Ignore all other characters.
+					// Iterate.
+					index++;
+					//throw new Exception($"Expected generic type parameter count at index {index} in '{this.assemblyQualifiedName.Span}'.");
 				}
 			}
 
-			Int32 aqnCount = Int32.Parse(this.assemblyQualifiedName.Span.Slice(numberIndex, numberLength));
-			this.genericTypeArguments = new RpcAssemblyQualifiedName[aqnCount];
+			if ((beginGenericFound == true) && (numberLength > 0)) {
+				Int32 aqnCount = Int32.Parse(this.assemblyQualifiedName.Span.Slice(numberIndex, numberLength));
+				this.genericTypeArguments = new RpcAssemblyQualifiedName[aqnCount];
 
-			for (Int32 aqnIndex = 0; aqnIndex < aqnCount; aqnIndex++) {
-				// Iterate begen generic characters.
-				this.ParseTrim(ref index, CharBeginGeneric);
+				for (Int32 aqnIndex = 0; aqnIndex < aqnCount; aqnIndex++) {
+					// Iterate begen generic characters.
+					this.ParseTrim(ref index, CharBeginGeneric);
 
-				// Parse the generic type.
-				RpcAssemblyQualifiedName aqn = new RpcAssemblyQualifiedName(this.assemblyQualifiedName, index);
-				index += aqn.indexLength;
-				this.genericTypeArguments[aqnIndex] = aqn;
+					// Parse the generic type.
+					RpcAssemblyQualifiedName aqn = new RpcAssemblyQualifiedName(this.assemblyQualifiedName, index);
+					index += aqn.indexLength;
+					this.genericTypeArguments[aqnIndex] = aqn;
 
-				// Iterate first end generic characters.
+					// Iterate first end generic characters.
+					this.ParseTrim(ref index, CharEndGeneric);
+
+					// Iterate generic separator.
+					if (aqnIndex < aqnCount - 1) {
+						this.ParseTrim(ref index, CharSeparator);
+						this.ParseTrim(ref index, CharSpace);
+					}
+				}
+
+				// Iterate second end generic characters.
 				this.ParseTrim(ref index, CharEndGeneric);
-
-				// Iterate generic separator.
-				if (aqnIndex < aqnCount - 1) {
-					this.ParseTrim(ref index, CharSeparator);
-					this.ParseTrim(ref index, CharSpace);
-				}
 			}
-
-			// Iterate second end generic characters.
-			this.ParseTrim(ref index, CharEndGeneric);
 		}
 
 		// 2b.
@@ -248,7 +272,10 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 
 					break;
 				} else {
-					throw new Exception($"Expected array dimension '{CharSeparator}' character or end of array '{CharEndArray}' character.");
+					// Ignore all other characters.
+					// Iterate.
+					index++;
+					//throw new Exception($"Expected array dimension '{CharSeparator}' character or end of array '{CharEndArray}' character at index {index} in '{this.assemblyQualifiedName.Span}'.");
 				}
 			}
 		}
@@ -339,33 +366,20 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Compares this Assembly Qualified Name with the specified object.
-	/// Note that the version, culture and public key are ignored when comparing.
 	/// </summary>
 	/// <param name="obj">The object to compare with.</param>
 	/// <returns>True when this Assembly Qualified Name equals the specified Assembly Qualified Name.</returns>
 	public override Boolean Equals(Object obj) {
-		return this.Equals((obj as RpcAssemblyQualifiedName), true, true, true);
+		return this.Equals((obj as RpcAssemblyQualifiedName), false, false, false);
 	} // Equals
 
 	/// <summary>
 	/// Compares this Assembly Qualified Name with the specified name.
-	/// Note that the version, culture and public key are ignored when comparing.
 	/// </summary>
 	/// <param name="assemblyQualifiedName">The Assembly Qualified Name to compare with.</param>
 	/// <returns>True when this Assembly Qualified Name equals the specified Assembly Qualified Name.</returns>
 	public Boolean Equals(RpcAssemblyQualifiedName assemblyQualifiedName) {
-		return this.Equals(assemblyQualifiedName, true, true, true);
-	} // Equals
-
-	/// <summary>
-	/// Compares this Assembly Qualified Name with the specified name.
-	/// Note that the culture and public key are ignored when comparing.
-	/// </summary>
-	/// <param name="assemblyQualifiedName">The Assembly Qualified Name to compare with.</param>
-	/// <param name="ignoreVersion">Specify if the version should be ignored when comparing.</param>
-	/// <returns>True when this Assembly Qualified Name equals the specified Assembly Qualified Name.</returns>
-	public Boolean Equals(RpcAssemblyQualifiedName assemblyQualifiedName, Boolean ignoreVersion) {
-		return this.Equals(assemblyQualifiedName, ignoreVersion, true, true);
+		return this.Equals(assemblyQualifiedName, false, false, false);
 	} // Equals
 
 	/// <summary>
@@ -374,7 +388,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	/// <param name="assemblyQualifiedName">The Assembly Qualified Name to compare with.</param>
 	/// <param name="ignoreVersion">Specify if the version should be ignored when comparing.</param>
 	/// <param name="ignoreCulture">Specify if the culture should be ignored when comparing.</param>
-	/// <param name="ignorePublicKey">Specify if the public key should be ignored when comparing.</param>
+	/// <param name="ignorePublicKey">Specify if the public key token should be ignored when comparing.</param>
 	/// <returns>True when this Assembly Qualified Name equals the specified Assembly Qualified Name.</returns>
 	public Boolean Equals(RpcAssemblyQualifiedName assemblyQualifiedName, Boolean ignoreVersion, Boolean ignoreCulture, Boolean ignorePublicKey) {
 		if (assemblyQualifiedName == null) {
@@ -383,33 +397,14 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 
 		return (
 			(this.typePart.Span.SequenceEqual(assemblyQualifiedName.typePart.Span) == true) &&
+			(this.isArray == assemblyQualifiedName.isArray) &&
+			(this.isGeneric == assemblyQualifiedName.isGeneric) &&
+			(this.genericTypeArguments.SequenceEqual(assemblyQualifiedName.genericTypeArguments, new RpcAssemblyQualifiedNameEqualityComparer(ignoreVersion, ignoreCulture, ignorePublicKey)) == true) &&
 			(this.assemblyNamePart.Span.SequenceEqual(assemblyQualifiedName.assemblyNamePart.Span) == true) &&
 			((ignoreVersion == true) || (this.assemblyVersionPart.Span.SequenceEqual(assemblyQualifiedName.assemblyVersionPart.Span) == true)) &&
 			((ignoreCulture == true) || (this.assemblyCulturePart.Span.SequenceEqual(assemblyQualifiedName.assemblyCulturePart.Span) == true)) &&
 			((ignorePublicKey == true) || (this.assemblyPublicKeyPart.Span.SequenceEqual(assemblyQualifiedName.assemblyPublicKeyPart.Span) == true))
 		);
-	} // Equals
-
-	/// <summary>
-	/// Compares two Assembly Qualified Name with each other.
-	/// Note that the version, culture and public key are ignored when comparing.
-	/// </summary>
-	/// <param name="assemblyQualifiedNameA">The Assembly Qualified Name to compare.</param>
-	/// <param name="assemblyQualifiedNameB">The Assembly Qualified Name to compare.</param>
-	/// <returns>True when both Assembly Qualified Names are null, true when both Assembly Qualified Names are equal, otherwise false.</returns>
-	public override Boolean Equals(RpcAssemblyQualifiedName assemblyQualifiedNameA, RpcAssemblyQualifiedName assemblyQualifiedNameB) {
-		// Both are null.
-		if ((assemblyQualifiedNameA == null) && (assemblyQualifiedNameB == null)) {
-			return true;
-		}
-
-		// One are null.
-		if ((assemblyQualifiedNameA == null) || (assemblyQualifiedNameB == null)) {
-			return false;
-		}
-
-		// Compare.
-		return assemblyQualifiedNameA.Equals(assemblyQualifiedNameB, true, true, true);
 	} // Equals
 	#endregion
 
@@ -418,14 +413,6 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	// HashCode methods.
 	//------------------------------------------------------------------------------------------------------------------
 	public override Int32 GetHashCode() {
-		return this.GetHashCode(this);
-	} // GetHashCode
-
-	public override Int32 GetHashCode(RpcAssemblyQualifiedName assemblyQualifiedName) {
-		if (assemblyQualifiedName == null) {
-			return base.GetHashCode();
-		}
-
 		return HashCode.Combine(
 			this.typePart,
 			this.assemblyNamePart,
@@ -433,6 +420,62 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 			this.assemblyCulturePart,
 			this.assemblyPublicKeyPart
 		);
+	} // GetHashCode
+
+	public Int32 GetHashCode(Boolean ignoreVersion, Boolean ignoreCulture, Boolean ignorePublicKey) {
+		switch (ignoreVersion, ignoreCulture, ignorePublicKey) {
+			case (true, true, true): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyVersionPart,
+				this.assemblyCulturePart,
+				this.assemblyPublicKeyPart
+			);
+
+			case (true, true, false): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyVersionPart,
+				this.assemblyCulturePart
+			);
+
+			case (true, false, false): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyVersionPart
+			);
+
+			case (false, true, true): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyCulturePart,
+				this.assemblyPublicKeyPart
+			);
+
+			case (false, true, false): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyCulturePart
+			);
+
+			case (true, false, true): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyVersionPart,
+				this.assemblyPublicKeyPart
+			);
+
+			case (false, false, true): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart,
+				this.assemblyPublicKeyPart
+			);
+
+			case (false, false, false): return HashCode.Combine(
+				this.typePart,
+				this.assemblyNamePart
+			);
+		}
 	} // GetHashCode
 	#endregion
 
@@ -496,7 +539,12 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	// BaseType methods.
 	//------------------------------------------------------------------------------------------------------------------
 	private Type GetBaseType() {
-		// TODO: Create and use cache.
+/*
+		return RpcAssemblyQualifiedName.typeCache.Get(
+			this.typePart.ToString(),
+			this.Assembly
+		);
+*/
 		String typeName = this.typePart.ToString();
 		Type type = Type.GetType(typeName, false);
 
@@ -512,7 +560,12 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	} // getBaseType
 
 	private Type GetGenericBaseType() {
-		// TODO: Create and use cache.
+/*
+		return RpcAssemblyQualifiedName.typeCache.Get(
+			$"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}",
+			this.Assembly
+		);
+*/
 		String typeName = $"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}";
 		Type type = Type.GetType(typeName, false);
 
@@ -555,7 +608,11 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	public Type Type {
 		get {
 			if (this.typePart.Length > 0) {
-				Type type = null;
+//				Type type = null;
+				Type type = RpcAssemblyQualifiedName.typeCache.Get(this);
+				if (type != null) {
+					return type;
+				}
 
 				// Create the array type.
 				if (this.isArray == 1) {
@@ -581,6 +638,9 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 				if ((this.isArray == 0) && (this.isGeneric == false)) {
 					type = this.GetBaseType();
 				}
+
+				// Add the type to the type cache.
+				RpcAssemblyQualifiedName.typeCache.Add(this, type);
 
 				// Return the type.
 				return type;
@@ -618,7 +678,7 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 				return null;
 			}
 		}
-	} // VersionSpan
+	} // Version
 
 	/// <summary>
 	/// Gets the culture, or null if the culture information was missing.
@@ -632,6 +692,83 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 			}
 		}
 	} // Culture
+
+	/// <summary>
+	/// Gets the parsed public key token, which is the last 8 bytes of the SHA-1 hash of the public key under which the
+	/// assembly is signed.
+	/// </summary>
+	public Byte[] PublicKeyToken {
+		get {
+			if (this.assemblyPublicKeyPart.Span.Length == 16) {
+				Byte[] token = new Byte[8];
+				token[0] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(00, 2).ToString(), 16);
+				token[1] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(02, 2).ToString(), 16);
+				token[2] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(04, 2).ToString(), 16);
+				token[3] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(06, 2).ToString(), 16);
+				token[4] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(08, 2).ToString(), 16);
+				token[5] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(10, 2).ToString(), 16);
+				token[6] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(12, 2).ToString(), 16);
+				token[7] = Convert.ToByte(this.assemblyPublicKeyPart.Span.Slice(14, 2).ToString(), 16);
+				return token;
+			} else {
+				return Array.Empty<Byte>();
+			}
+		}
+	} // PublicKeyToken
+	#endregion
+
+	#region Memory properties
+	//------------------------------------------------------------------------------------------------------------------
+	// Memory properties.
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets the parsed type information.
+	/// </summary>
+	internal ReadOnlyMemory<Char> TypePart {
+		get {
+			return this.typePart;
+		}
+	} // TypePart
+
+	/// <summary>
+	/// Gets the parsed assembly information.
+	/// </summary>
+	internal ReadOnlyMemory<Char> AssemblyPart {
+		get {
+			return this.assemblyNamePart;
+		}
+	} // AssemblyPart
+
+	/// <summary>
+	/// Gets the parsed version information.
+	/// </summary>
+	internal ReadOnlyMemory<Char> VersionPart {
+		get {
+			return this.assemblyVersionPart;
+		}
+	} // VersionPart
+
+	/// <summary>
+	/// Gets the parsed culture information.
+	/// </summary>
+	internal ReadOnlyMemory<Char> CulturePart {
+		get {
+			return this.assemblyCulturePart;
+		}
+	} // CulturePart
+
+	/// <summary>
+	/// Gets the parsed public key token information.
+	/// </summary>
+	internal ReadOnlyMemory<Char> PublicKeyTokenPart {
+		get {
+			if (this.assemblyPublicKeyPart.Span.Length == 16) {
+				return this.assemblyPublicKeyPart;
+			} else {
+				return ReadOnlyMemory<Char>.Empty;
+			}
+		}
+	} // PublicKeyTokenPart
 	#endregion
 
 	#region Span properties
@@ -675,11 +812,15 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	} // CultureSpan
 
 	/// <summary>
-	/// Gets the parsed public key information.
+	/// Gets the parsed public key token information.
 	/// </summary>
 	public ReadOnlySpan<Char> PublicKeyTokenSpan {
 		get {
-			return this.assemblyPublicKeyPart.Span;
+			if (this.assemblyPublicKeyPart.Span.Length == 16) {
+				return this.assemblyPublicKeyPart.Span;
+			} else {
+				return ReadOnlySpan<Char>.Empty;
+			}
 		}
 	} // PublicKeyTokenSpan
 	#endregion
@@ -725,14 +866,158 @@ public class RpcAssemblyQualifiedName : EqualityComparer<RpcAssemblyQualifiedNam
 	} // CultureString
 
 	/// <summary>
-	/// Gets the parsed public key information.
+	/// Gets the parsed public key token information.
 	/// </summary>
 	public String PublicKeyTokenString {
 		get {
-			return this.assemblyPublicKeyPart.ToString();
+			if (this.assemblyPublicKeyPart.Span.Length == 16) {
+				return this.assemblyPublicKeyPart.ToString();
+			} else {
+				return String.Empty;
+			}
 		}
 	} // PublicKeyTokenString
 	#endregion
 
+	#region Compare methods
+	//------------------------------------------------------------------------------------------------------------------
+	// Compare methods.
+	//------------------------------------------------------------------------------------------------------------------
+	public Boolean Equals(Type type, Boolean ignoreVersion, Boolean ignoreCulture, Boolean ignorePublicKey) {
+		if (type == null) {
+			return false;
+		}
+
+		return this.Equals(new RpcAssemblyQualifiedName(type.AssemblyQualifiedName), ignoreVersion, ignoreCulture, ignorePublicKey);
+	} // Equals
+
+	public Boolean Equals(TypeInfo typeInfo, Boolean ignoreVersion, Boolean ignoreCulture, Boolean ignorePublicKey) {
+		if (typeInfo == null) {
+			return false;
+		}
+
+//Console.WriteLine($"EQUALS: '{typeInfo.AssemblyQualifiedName}'  AND  '{typeInfo.AsType().AssemblyQualifiedName}'");
+		return this.Equals(new RpcAssemblyQualifiedName(typeInfo.AssemblyQualifiedName), ignoreVersion, ignoreCulture, ignorePublicKey);
+/*
+		// Compare Qualified Name (namespace and type name).
+		if (typeInfo.FullName != this.TypeString) {
+			return false;
+		}
+
+		// Compate array type.
+		if (typeInfo.IsArray != this.IsArray) {
+			return false;
+		}
+		// TODO: typeInfo.GetElementType()
+
+		// Compate generic type.
+		if (typeInfo.IsGenericType != this.IsGeneric) {
+			return false;
+		}
+		// TODO: Generic type params match.
+
+		// Compare Assembly Name.
+		if (typeInfo.Assembly.GetName().Name != this.AssemblyString) {
+			return false;
+		}
+
+		// Ignore version.
+		if (ignoreVersion == true) {
+			return true;
+		}
+
+		// Compare version.
+		if (typeInfo.Assembly.GetName().Version != this.Version) {
+			return false;
+		}
+
+		// Compare culture.
+		if (typeInfo.Assembly.GetName().CultureInfo != this.Culture) {
+			return false;
+		}
+
+		// Compare public key.
+		if (typeInfo.Assembly.GetName().GetPublicKeyToken().SequenceEqual(this.PublicKeyToken) == false) {
+			return false;
+		}
+
+		// Total match.
+		return true;
+*/
+	} // Equals
+	#endregion
+
 } // RpcAssemblyQualifiedName
+#endregion
+
+#region RpcAssemblyQualifiedNameEqualityComparer
+//----------------------------------------------------------------------------------------------------------------------
+// RpcAssemblyQualifiedNameEqualityComparer.
+//----------------------------------------------------------------------------------------------------------------------
+/// <summary>
+/// This is a Assembly Qualified Name equality comparer.
+/// It can compare all name parts, or ignore some name parts like version, culture and public key token.
+/// </summary>
+public class RpcAssemblyQualifiedNameEqualityComparer : IEqualityComparer<RpcAssemblyQualifiedName> {
+	private Boolean ignoreVersion;
+	private Boolean ignoreCulture;
+	private Boolean ignorePublicKey;
+
+	#region Constructors
+	//------------------------------------------------------------------------------------------------------------------
+	// Constructors.
+	//------------------------------------------------------------------------------------------------------------------
+	public RpcAssemblyQualifiedNameEqualityComparer() {
+		this.ignoreVersion = true;
+		this.ignoreCulture = true;
+		this.ignorePublicKey = true;
+	} // RpcAssemblyQualifiedNameEqualityComparer
+
+	public RpcAssemblyQualifiedNameEqualityComparer(Boolean ignoreVersion, Boolean ignoreCulture, Boolean ignorePublicKey) {
+		this.ignoreVersion = ignoreVersion;
+		this.ignoreCulture = ignoreCulture;
+		this.ignorePublicKey = ignorePublicKey;
+	} // RpcAssemblyQualifiedNameEqualityComparer
+	#endregion
+
+	#region Equals methods
+	//------------------------------------------------------------------------------------------------------------------
+	// Equals methods.
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Compares two Assembly Qualified Name with each other.
+	/// </summary>
+	/// <param name="assemblyQualifiedNameA">The Assembly Qualified Name to compare.</param>
+	/// <param name="assemblyQualifiedNameB">The Assembly Qualified Name to compare.</param>
+	/// <returns>True when both Assembly Qualified Names are null, true when both Assembly Qualified Names are equal, otherwise false.</returns>
+	public Boolean Equals(RpcAssemblyQualifiedName assemblyQualifiedNameA, RpcAssemblyQualifiedName assemblyQualifiedNameB) {
+		// Both are null.
+		if ((assemblyQualifiedNameA == null) && (assemblyQualifiedNameB == null)) {
+			return true;
+		}
+
+		// One are null.
+		if ((assemblyQualifiedNameA == null) || (assemblyQualifiedNameB == null)) {
+			return false;
+		}
+
+		// Compare.
+		return assemblyQualifiedNameA.Equals(assemblyQualifiedNameB, ignoreVersion, ignoreCulture, ignorePublicKey);
+	} // Equals
+	#endregion
+
+	#region HashCode methods
+	//------------------------------------------------------------------------------------------------------------------
+	// HashCode methods.
+	//------------------------------------------------------------------------------------------------------------------
+	public Int32 GetHashCode(RpcAssemblyQualifiedName assemblyQualifiedName) {
+		if (assemblyQualifiedName != null) {
+			return assemblyQualifiedName.GetHashCode(ignoreVersion, ignoreCulture, ignorePublicKey);
+		} else {
+			return 0;
+		}
+	} // GetHashCode
+	#endregion
+
+} // RpcAssemblyQualifiedNameEqualityComparer
 #endregion

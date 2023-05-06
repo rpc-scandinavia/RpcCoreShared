@@ -12,10 +12,11 @@ using RpcScandinavia.Core;
 /// The key/value provider extracts keys and values from the key/value collection, during deserialization.
 /// </summary>
 /// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
-public class RpcKeyValueProvider<KeyValueType> {
+public class RpcKeyValueProvider<KeyValueType> : IRpcKeyValueProvider {
+	private readonly RpcKeyValueProviderItem items;
 	private readonly IEnumerable<KeyValueType> values;
-	private readonly Func<KeyValueType, String> getKey;
-	private readonly Func<KeyValueType, String> getValue;
+	private readonly Func<KeyValueType, ReadOnlyMemory<Char>> getKey;
+	private readonly Func<KeyValueType, ReadOnlyMemory<Char>> getValue;
 	private readonly RpcKeyValueSerializerOptions options;
 
 	/// <summary>
@@ -25,7 +26,7 @@ public class RpcKeyValueProvider<KeyValueType> {
 	/// <param name="getKey">A function that gets the key from the KeyValueType.</param>
 	/// <param name="getValue">A function that gets the value from the KeyValueType.</param>
 	/// <param name="options">The serialization options.</param>
-	public RpcKeyValueProvider(IEnumerable<KeyValueType> values, Func<KeyValueType, String> getKey, Func<KeyValueType, String> getValue, RpcKeyValueSerializerOptions options) {
+	public RpcKeyValueProvider(IEnumerable<KeyValueType> values, Func<KeyValueType, ReadOnlyMemory<Char>> getKey, Func<KeyValueType, ReadOnlyMemory<Char>> getValue, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -41,176 +42,174 @@ public class RpcKeyValueProvider<KeyValueType> {
 		}
 
 		// Initialize.
+		this.items = new RpcKeyValueProviderItem();
 		this.values = values;
 		this.getKey = getKey;
 		this.getValue = getValue;
 		this.options = options;
+
+		this.Parse();
 	} // RpcKeyValueProvider
 
-	/// <summary>
-	/// Gets the number of values under the key.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <returns>The number of values.</returns>
-	public Int32 GetCount(String keyPath, String key) {
-		// Get a list of keys:
-		// 1) Get a string list of keys from the values (key/value pair).
-		// 2) Get the keys that belong to the path, and below.
-		// 3) Trim the path from the keys.
-		// 4) Get the keys only. Each string key is split by the hierarchy separator character, so the first item is the collection key.
-		// 5) Exclude all keys that starts with "$".
-		// 6) Remove doublets.
-		keyPath = $"{keyPath}{options.HierarchySeparatorChar}{key}{options.HierarchySeparatorChar}".TrimStart(options.HierarchySeparatorChar);
-		return values
-			.Select((value) => getKey(value))
-			.Where((key) => key.StartsWith(keyPath))
-			.Select((key) => key.Substring(keyPath.Length))
-			.Select((key) => key.Split(options.HierarchySeparatorChar)[0])
-			.Where((key) => (key.StartsWith("$") == false))
-			.Distinct()
-			.Count();
-	} // GetCount
+	private void Parse() {
+		// Iterate through each value (key/value pair).
+		foreach (KeyValueType keyValue in values) {
+			// Get the key and the value.
+			ReadOnlyMemory<Char> key = this.getKey(keyValue);
+			ReadOnlyMemory<Char> value = this.getValue(keyValue);
 
-	/// <summary>
-	/// Gets the keys at the path.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <returns>The enumerator with the matching keys.</returns>
-	public IEnumerable<String> GetKeys(String keyPath) {
-		// Get a list of keys:
-		// 1) Get a string list of keys from the values (key/value pair).
-		// 2) Get the keys that belong to the path, and below.
-		// 3) Trim the path from the keys.
-		// 4) Get the keys only. Each string key is split by the hierarchy separator character, so the first item is the collection key.
-		// 5) Exclude all keys that starts with "$".
-		// 6) Remove doublets.
-		keyPath = $"{keyPath}{options.HierarchySeparatorChar}".TrimStart(options.HierarchySeparatorChar);
-		return values
-			.Select((value) => getKey(value))
-			.Where((key) => key.StartsWith(keyPath))
-			.Select((key) => key.Substring(keyPath.Length))
-			.Select((key) => key.Split(options.HierarchySeparatorChar)[0])
-			.Where((key) => (key.StartsWith("$") == false))
-			.Distinct();
-	} // GetKeys
+			// Get the root item.
+			RpcKeyValueProviderItem item = this.items;
 
-	/// <summary>
-	/// Gets the keys at the path.
-	/// The keys are converted to <see cref="System.Int32" />, and non numeric keys are ignored.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <returns>The enumerator with the matching keys.</returns>
-	public IEnumerable<Int32> GetKeysAsInt32(String keyPath) {
-		// Get a list of keys:
-		// 1) Get a string list of keys from the values (key/value pair).
-		// 2) Get the keys that belong to the path, and below.
-		// 3) Trim the path from the keys.
-		// 4) Get the keys only. Each string key is split by the hierarchy separator character, so the first item is the collection key.
-		// 5) Exclude all keys that starts with "$".
-		// 6) Remove doublets.
-		// 7) Convert each key to Int32.
-		keyPath = $"{keyPath}{options.HierarchySeparatorChar}".TrimStart(options.HierarchySeparatorChar);
-		return values
-			.Select((value) => getKey(value))
-			.Where((key) => key.StartsWith(keyPath))
-			.Select((key) => key.Substring(keyPath.Length))
-			.Select((key) => key.Split(options.HierarchySeparatorChar)[0])
-			.Where((key) => (key.StartsWith("$") == false))
-			.Distinct()
-			.Select((key) => {
-				try {
-					return Int32.Parse(key);
-				} catch {
-					return -1;
-				}
-			})
-			.Where((key) => (key > -1));
-	} // GetKeysAsInt32
+			// Iterate through each item in the key, and add the path.
+			Int32 index = key.Span.IndexOf(this.options.HierarchySeparatorChar);
+			while (index > -1) {
+				// Add the current key in the path.
+				item = item.Add(key.Slice(0, index));
 
-/*
-	/// <summary>
-	/// Gets the key/value items under the path and all remaining levels.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <returns>The enumerator with the matching key/value items.</returns>
-	public IEnumerable<KeyValueType> GetValues(String keyPath) {
-		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
+				// Remove the current key from the path.
+				key = key.Slice(index + 1);
+
+				// Iterate.
+				index = key.Span.IndexOf(this.options.HierarchySeparatorChar);
+			}
+
+			// Add the last key in the path.
+			item = item.Add(key);
+
+			// Add the value.
+			item = item.Add(value);
 		}
+	} // Parse
 
-		// Return the matching key/value items.
-		return this.values
-			.Where((keyValue) => getKey(keyValue).StartsWith(keyPath));
-	} // GetValues
-*/
-
-	/// <summary>
-	/// Gets the value from the key.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <returns>The value or null.</returns>
-	public String GetValue(String keyPath, String key) {
-		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
-		}
-		if (key == null) {
-			throw new NullReferenceException(nameof(key));
-		}
-
-		// Return the matching value or null.
-		key = $"{keyPath}{this.options.HierarchySeparatorChar}{key}".Trim(options.HierarchySeparatorChar);
-		return this.values
-			.Where((keyValue) => getKey(keyValue).Equals(key))
-			.Select((keyValue) => getValue(keyValue))
-			.FirstOrDefault();
-	} // GetValue
-
-	/// <summary>
-	/// Gets the type meta data under the key.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <returns>The type meta data or null.</returns>
-	public String GetTypeMetadata(String keyPath, String key) {
-		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
-		}
-		if (key == null) {
-			throw new NullReferenceException(nameof(key));
-		}
-
-		// Return the matching value or null.
-		key = $"{keyPath}{this.options.HierarchySeparatorChar}{key}{this.options.HierarchySeparatorChar}$Type".Trim(options.HierarchySeparatorChar);
-		return this.values
-			.Where((keyValue) => getKey(keyValue).Equals(key))
-			.Select((keyValue) => getValue(keyValue))
-			.FirstOrDefault();
+	// IRpcKeyValueProvider
+	public ReadOnlyMemory<Char> GetTypeMetadata() {
+		return this.items.GetTypeMetadata();
 	} // GetTypeMetadata
 
-	// TODO: Perhaps not in both "RpcKeyValueBuilder" and "RpcKeyValueProvider".
-	/// <summary>
-	/// Gets the path for the next level.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <returns>The path.</returns>
-	public String GetNextLevelKeyPrefix(String keyPath, String key) {
-		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
-		}
-		if (key == null) {
-			throw new NullReferenceException(nameof(key));
-		}
+	public ReadOnlyMemory<Char> GetValue() {
+		return this.items.GetValue();
+	} // GetValue
 
-		// Return.
-		return $"{keyPath}{this.options.HierarchySeparatorChar}{key}".Trim(options.HierarchySeparatorChar);
-	} // GetNextLevelKeyPrefix
+	public Int32 Count() {
+		return this.items.Count();
+	} // Count
+
+	public Boolean ContainsKey(ReadOnlyMemory<Char> key) {
+		return this.items.ContainsKey(key);
+	} // ContainsKey
+
+	public IRpcKeyValueProvider GetKey(ReadOnlyMemory<Char> key) {
+		return this.items.GetKey(key);
+	} // GetKey
+
+	public IRpcKeyValueProvider[] GetKeys() {
+		return this.items.GetKeys();
+	} // GetKeysAsInt32
+
+	public ReadOnlyMemory<Char> GetFirstKeyValueOrEmpty() {
+		return this.items.GetFirstKeyValueOrEmpty();
+	} // GetFirstKeyValueOrEmpty
 
 } // RpcKeyValueProvider
+#endregion
+
+#region RpcKeyValueProviderItem
+//----------------------------------------------------------------------------------------------------------------------
+// RpcKeyValueProviderItem.
+//----------------------------------------------------------------------------------------------------------------------
+/// <summary>
+/// The keys and values are parsed into a tree structure, using this struct.
+/// The value can either be part of a path or the value at the end of the path.
+/// </summary>
+public struct RpcKeyValueProviderItem : IRpcKeyValueProvider {
+	public static ReadOnlyMemory<Char> TypeMetadataKey = "$Type".AsMemory();
+
+	public readonly ReadOnlyMemory<Char> value;
+	public readonly List<RpcKeyValueProviderItem> items;
+
+	public RpcKeyValueProviderItem() {
+		this.value = ReadOnlyMemory<Char>.Empty;
+		this.items = new List<RpcKeyValueProviderItem>();
+	} // RpcKeyValueProviderItem
+
+	public RpcKeyValueProviderItem(ReadOnlyMemory<Char> value) {
+		this.value = value;
+		this.items = new List<RpcKeyValueProviderItem>();
+	} // RpcKeyValueProviderItem
+
+	public RpcKeyValueProviderItem Add(ReadOnlyMemory<Char> value) {
+		foreach (RpcKeyValueProviderItem item in this.items) {
+			if (item.value.Span.SequenceEqual(value.Span) == true) {
+				return item;
+			}
+		}
+
+		// Add.
+		RpcKeyValueProviderItem newItem = new RpcKeyValueProviderItem(value);
+		this.items.Add(newItem);
+		return newItem;
+	} // Add
+
+	public ReadOnlyMemory<Char> GetTypeMetadata() {
+		foreach (RpcKeyValueProviderItem item in this.items) {
+			if (item.value.Span.SequenceEqual(RpcKeyValueProviderItem.TypeMetadataKey.Span) == true) {
+				return item.GetFirstKeyValueOrEmpty();
+			}
+		}
+
+		// Return empty.
+		return ReadOnlyMemory<Char>.Empty;
+	} // GetTypeMetadata
+
+	public ReadOnlyMemory<Char> GetValue() {
+		return this.value;
+	} // GetValue
+
+	public Int32 Count() {
+		return this.items.Count;
+	} // Count
+
+	public Boolean ContainsKey(ReadOnlyMemory<Char> key) {
+		foreach (RpcKeyValueProviderItem item in this.items) {
+			if (item.value.Span.SequenceEqual(key.Span) == true) {
+				return true;
+			}
+		}
+
+		// Return empty.
+		return false;
+	} // ContainsKey
+
+	public IRpcKeyValueProvider GetKey(ReadOnlyMemory<Char> key) {
+		foreach (RpcKeyValueProviderItem item in this.items) {
+			if (item.value.Span.SequenceEqual(key.Span) == true) {
+				return item;
+			}
+		}
+
+		// Return empty.
+		return new RpcKeyValueProviderItem();
+	} // GetKey
+
+	public IRpcKeyValueProvider[] GetKeys() {
+		return this.items
+			.Where((item) => (item.value.Span.SequenceEqual(RpcKeyValueProviderItem.TypeMetadataKey.Span) == false))
+			.ToList()
+			.ConvertAll<IRpcKeyValueProvider>((item) => (IRpcKeyValueProvider)item)
+			.ToArray();
+	} // GetKeysAsInt32
+
+	public ReadOnlyMemory<Char> GetFirstKeyValueOrEmpty() {
+		foreach (RpcKeyValueProviderItem item in this.items) {
+			if (item.value.Span.SequenceEqual(RpcKeyValueProviderItem.TypeMetadataKey.Span) == false) {
+				return item.value;
+			}
+		}
+
+		// Return empty.
+		return ReadOnlyMemory<Char>.Empty;
+	} // GetFirstKeyValueOrEmpty
+
+} // RpcKeyValueProviderItem
 #endregion

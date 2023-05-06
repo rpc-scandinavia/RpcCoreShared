@@ -31,7 +31,7 @@ public class RpcKeyValueSerializerTests {
 		// Serialize.
 		//List<KeyValuePair<String, String>> serialized = this.GetTestResult();
 		List<KeyValuePair<String, String>> serialized = RpcKeyValueSerializer.Serialize(data);
-		List<KeyValuePair<String, String>> serialized1 = RpcKeyValueSerializer.Serialize(data, keyValueSerializerOptions);
+//		List<KeyValuePair<String, String>> serialized1 = RpcKeyValueSerializer.Serialize(data, keyValueSerializerOptions);
 
 File.WriteAllLines(
 	"/data/users/rpc@rpc-scandinavia.dk/Desktop/Linux/Serialized test.txt",
@@ -100,6 +100,11 @@ File.WriteAllLines(
 			RpcKeyValueSerializer.GetMemberValue<String>(data, text[39].Key)
 		);
 
+		Assert.AreEqual<DataEnumA>(
+			DataEnumA.Two,
+			RpcKeyValueSerializer.GetMemberValue<DataEnumA>(data, text[57].Key)
+		);
+
 		Assert.AreEqual<Boolean>(
 			data.EnumB.HasFlag(DataEnumB.Bravo),
 			RpcKeyValueSerializer.GetMemberValue<Boolean>(data, text[28].Key)
@@ -128,6 +133,9 @@ File.WriteAllLines(
 			RpcKeyValueSerializer.SetMemberValue(data, text[6].Key, $"qwerty {index}");
 			Assert.AreEqual<String>($"qwerty {index}", data.Comments[1].Value);
 		}
+
+		RpcKeyValueSerializer.SetMemberValue(data, text[57].Key, 1);
+		Assert.AreEqual<DataEnumA>(DataEnumA.One, ((DataA)data.Tag).EnumA);
 
 	} // TestSetValues
 

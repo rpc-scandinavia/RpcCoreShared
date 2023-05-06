@@ -10,7 +10,7 @@ using System.Collections.Generic;
 /// The key/value builder collects keys and values during serialization.
 /// </summary>
 /// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
-public class RpcKeyValueBuilder<KeyValueType> {
+public class RpcKeyValueBuilder<KeyValueType> : IRpcKeyValueBuilder {
 	private readonly List<KeyValueType> values;
 	private readonly Func<String, String, KeyValueType> createKeyValueInstance;
 	private readonly RpcKeyValueSerializerOptions options;
@@ -44,41 +44,34 @@ public class RpcKeyValueBuilder<KeyValueType> {
 		}
 	} // Values
 
-	/// <summary>
-	/// Add a new key/value item, under the path.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <param name="value">The value.</param>
-	public void Add(String keyPath, String key, String value) {
-		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
+	public Int32 Level {
+		get {
+			return 0;
 		}
+	} // Level
+
+	public RpcKeyValueSerializerOptions Options {
+		get {
+			return this.options;
+		}
+	} // Options
+
+	public IRpcKeyValueBuilder AddLevel(String key) {
+		return new RpcKeyValueBuilderLevel(this, key, 1);
+	} // AddLevel
+
+	public void Add(String key, String value) {
+		// Validate.
 		if (key == null) {
 			throw new NullReferenceException(nameof(key));
 		}
 
 		// Add.
-		this.values.Add(
-			this.createKeyValueInstance(
-				$"{keyPath}{this.options.HierarchySeparatorChar}{key}".Trim(options.HierarchySeparatorChar),
-				value
-			)
-		);
+		this.values.Add(this.createKeyValueInstance(key, value));
 	} // Add
 
-	/// <summary>
-	/// Add a new key/value item containing the type meta data, under the key.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <param name="type">The type.</param>
-	public void AddTypeMetadata(String keyPath, String key, Type type) {
+	public void AddTypeMetadata(String key, Type type) {
 		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
-		}
 		if (key == null) {
 			throw new NullReferenceException(nameof(key));
 		}
@@ -87,33 +80,78 @@ public class RpcKeyValueBuilder<KeyValueType> {
 		}
 
 		// Add.
-		this.values.Add(
-			this.createKeyValueInstance(
-				$"{keyPath}{this.options.HierarchySeparatorChar}{key}{this.options.HierarchySeparatorChar}$Type".Trim(options.HierarchySeparatorChar),
-				type.AssemblyQualifiedName
-			)
-		);
+		if (key.IsNullOrWhiteSpace() == false) {
+			this.values.Add(this.createKeyValueInstance($"{key}{this.options.HierarchySeparatorChar}$Type", type.AssemblyQualifiedName));
+		} else {
+			this.values.Add(this.createKeyValueInstance($"$Type", type.AssemblyQualifiedName));
+		}
 	} // AddTypeMetadata
 
-	// TODO: Perhaps not in both "RpcKeyValueBuilder" and "RpcKeyValueProvider".
-	/// <summary>
-	/// Gets the path for the next level.
-	/// </summary>
-	/// <param name="keyPath">The path to the key.</param>
-	/// <param name="key">The key.</param>
-	/// <returns>The path.</returns>
-	public String GetNextLevelKeyPrefix(String keyPath, String key) {
-		// Validate.
-		if (keyPath == null) {
-			throw new NullReferenceException(nameof(keyPath));
+} // RpcKeyValueBuilder
+#endregion
+
+#region RpcKeyValueBuilderLevel
+//----------------------------------------------------------------------------------------------------------------------
+// RpcKeyValueBuilderLevel.
+//----------------------------------------------------------------------------------------------------------------------
+public class RpcKeyValueBuilderLevel : IRpcKeyValueBuilder {
+	private IRpcKeyValueBuilder builder;
+	private String path;
+	private Int32 level;
+
+	public RpcKeyValueBuilderLevel(IRpcKeyValueBuilder builder, String path, Int32 level) {
+		this.builder = builder;
+		if (path.IsNullOrWhiteSpace() == true) {
+			this.path = String.Empty;
+			this.level = level;
+		} else {
+			this.path = $"{path}{builder.Options.HierarchySeparatorChar}";
+			this.level = level;
 		}
+	} // RpcKeyValueBuilderLevel
+
+	public IRpcKeyValueBuilder AddLevel(String key) {
+		return new RpcKeyValueBuilderLevel(this.builder, $"{this.path}{key}", level + 1);
+	} // AddLevel
+
+	public void Add(String key, String value) {
+		// Validate.
 		if (key == null) {
 			throw new NullReferenceException(nameof(key));
 		}
 
-		// Return.
-		return $"{keyPath}{this.options.HierarchySeparatorChar}{key}".Trim(options.HierarchySeparatorChar);
-	} // GetNextLevelKeyPrefix
+		// Add.
+		this.builder.Add($"{this.path}{key}", value);
+	} // Add
 
-} // RpcKeyValueBuilder
+	public void AddTypeMetadata(String key, Type type) {
+		// Validate.
+		if (key == null) {
+			throw new NullReferenceException(nameof(key));
+		}
+		if (type == null) {
+			throw new NullReferenceException(nameof(type));
+		}
+
+		// Add.
+		if (key.IsNullOrWhiteSpace() == false) {
+			this.builder.Add($"{this.path}{key}{this.builder.Options.HierarchySeparatorChar}$Type", type.AssemblyQualifiedName);
+		} else {
+			this.builder.Add($"{this.path}$Type", type.AssemblyQualifiedName);
+		}
+	} // AddTypeMetadata
+
+	public Int32 Level {
+		get {
+			return this.level;
+		}
+	} // Level
+
+	public RpcKeyValueSerializerOptions Options {
+		get {
+			return this.builder.Options;
+		}
+	} // Options
+
+} // RpcKeyValueBuilderLevel
 #endregion
