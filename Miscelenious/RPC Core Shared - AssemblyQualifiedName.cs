@@ -39,8 +39,6 @@ public class RpcAssemblyQualifiedName {
 	private Int32 indexBegin;
 	private Int32 indexLength;
 
-	private static RpcTypeCache typeCache = new RpcTypeCache();
-
 	#region Constructors
 	//------------------------------------------------------------------------------------------------------------------
 	// Constructors.
