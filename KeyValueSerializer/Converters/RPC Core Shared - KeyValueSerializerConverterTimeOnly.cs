@@ -12,14 +12,14 @@ using System.Globalization;
 public class RpcKeyValueSerializerConverterTimeOnly : RpcKeyValueSerializerConverter<TimeOnly> {
 
 	/// <inheritdoc />
-	public override String Serialize(TimeOnly obj, RpcKeyValueSerializerOptions options) {
+	public override ReadOnlyMemory<Char> Serialize(TimeOnly obj, RpcKeyValueSerializerOptions options) {
 		// Sortable pattern, "HH:mm:ss".
-		return obj.ToString("o");	// "o" or "r".
+		return obj.ToString("o").AsMemory();	// "o" or "r".
 	} // Serialize
 
 	/// <inheritdoc />
-	public override TimeOnly Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
-		return TimeOnly.Parse(value, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
+	public override TimeOnly Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
+		return TimeOnly.Parse(value.Span, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
 	} // Deserialize
 
 } // RpcKeyValueSerializerConverterTimeOnly

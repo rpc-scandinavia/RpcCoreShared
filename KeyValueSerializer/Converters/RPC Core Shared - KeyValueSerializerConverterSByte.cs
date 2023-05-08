@@ -12,13 +12,13 @@ using System.Globalization;
 public class RpcKeyValueSerializerConverterSByte : RpcKeyValueSerializerConverter<SByte> {
 
 	/// <inheritdoc />
-	public override String Serialize(SByte obj, RpcKeyValueSerializerOptions options) {
-		return obj.ToString(CultureInfo.InvariantCulture.NumberFormat);
+	public override ReadOnlyMemory<Char> Serialize(SByte obj, RpcKeyValueSerializerOptions options) {
+		return obj.ToString(CultureInfo.InvariantCulture.NumberFormat).AsMemory();
 	} // Serialize
 
 	/// <inheritdoc />
-	public override SByte Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
-		return SByte.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
+	public override SByte Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
+		return SByte.Parse(value.Span, CultureInfo.InvariantCulture.NumberFormat);
 	} // Deserialize
 
 } // RpcKeyValueSerializerConverterSByte

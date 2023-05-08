@@ -11,13 +11,13 @@ using System;
 public class RpcKeyValueSerializerConverterBoolean : RpcKeyValueSerializerConverter<Boolean> {
 
 	/// <inheritdoc />
-	public override String Serialize(Boolean obj, RpcKeyValueSerializerOptions options) {
-		return obj.ToString();
+	public override ReadOnlyMemory<Char> Serialize(Boolean obj, RpcKeyValueSerializerOptions options) {
+		return obj.ToString().AsMemory();
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Boolean Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
-		return Boolean.Parse(value);
+	public override Boolean Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
+		return Boolean.Parse(value.Span);
 	} // Deserialize
 
 } // RpcKeyValueSerializerConverterBoolean

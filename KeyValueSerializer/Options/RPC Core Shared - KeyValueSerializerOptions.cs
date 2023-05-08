@@ -11,8 +11,9 @@ using System.Collections.Generic;
 /// RPC Key/Value serialization options.
 /// </summary>
 public class RpcKeyValueSerializerOptions {
-	private DateTime modified;
+	private RpcSimpleLocalCache<Type, RpcKeyValueSerializerConverter> converterCache;
 	private List<RpcKeyValueSerializerConverter> converters;
+	private DateTime modified;
 	private Char keyEscapeCharA;
 	private Char keyEscapeCharB;
 	private Char hierarchySeparatorChar;
@@ -28,8 +29,6 @@ public class RpcKeyValueSerializerOptions {
 	private RpcKeyValueSerializerTypeInfoOption serializeTypeInfo;
 	private Boolean serializeTimeInfo;
 	private RpcKeyValueSerializerExceptionOption serializeThrowExceptions;
-//	private Boolean deserializeTypeInfo;
-	private Boolean deserializeEnums;
 	private DateTimeStyles deserializeDateTimeStyles;
 	private RpcKeyValueSerializerExceptionOption deserializeThrowExceptions;
 
@@ -76,6 +75,11 @@ public class RpcKeyValueSerializerOptions {
 		this.converters.Add(new RpcKeyValueSerializerConverterGridListString());
 		#endif
 
+		// Setup the converter cache.
+		this.converterCache = new RpcSimpleLocalCache<Type, RpcKeyValueSerializerConverter>(
+			(key) => RpcKeyValueSerializerConverter.GetConverter(key, this)
+		);
+
 		this.modified = DateTime.Now;
 		this.keyEscapeCharA = '\\';
 		this.keyEscapeCharB = '/';
@@ -92,15 +96,14 @@ public class RpcKeyValueSerializerOptions {
 		this.serializeTypeInfo = RpcKeyValueSerializerTypeInfoOption.RequiredAndTop;
 		this.serializeTimeInfo = false;
 		this.serializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowCriticalExceptions;
-//		this.deserializeTypeInfo = true;
-		this.deserializeEnums = true;
 		this.deserializeDateTimeStyles = DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowWhiteSpaces;
 		this.deserializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowCriticalExceptions;
 	} // KeyValueSerializerOptions
 
 	public RpcKeyValueSerializerOptions(RpcKeyValueSerializerOptions options) {
-		this.modified = options.modified;
 		this.converters = new List<RpcKeyValueSerializerConverter>();
+		this.converterCache = options.converterCache;
+		this.modified = options.modified;
 		this.converters.AddRange(options.converters);
 		this.keyEscapeCharA = options.keyEscapeCharA;
 		this.keyEscapeCharB = options.keyEscapeCharB;
@@ -118,8 +121,6 @@ public class RpcKeyValueSerializerOptions {
 		this.serializeTypeInfo = options.serializeTypeInfo;
 		this.serializeTimeInfo = options.serializeTimeInfo;
 		this.serializeThrowExceptions = options.serializeThrowExceptions;
-//		this.deserializeTypeInfo = options.deserializeTypeInfo;
-		this.deserializeEnums = options.deserializeEnums;
 		this.deserializeDateTimeStyles = options.deserializeDateTimeStyles;
 		this.deserializeThrowExceptions = options.deserializeThrowExceptions;
 	} // KeyValueSerializerOptions
@@ -130,15 +131,6 @@ public class RpcKeyValueSerializerOptions {
 	// Properties.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
-	/// Gets the last time when the options was modified.
-	/// </summary>
-	public DateTime Modified {
-		get {
-			return this.modified;
-		}
-	} // Modified
-
-	/// <summary>
 	/// Gets the list of converters.
 	/// </summary>
 	public RpcKeyValueSerializerConverter[] Converters {
@@ -146,6 +138,15 @@ public class RpcKeyValueSerializerOptions {
 			return this.converters.ToArray();
 		}
 	} // Converters
+
+	/// <summary>
+	/// Gets the last time when the options was modified.
+	/// </summary>
+	public DateTime Modified {
+		get {
+			return this.modified;
+		}
+	} // Modified
 
 	/// <summary>
 	/// Gets the A character used to escape illegal characters in the keys.
@@ -351,35 +352,6 @@ public class RpcKeyValueSerializerOptions {
 		}
 	} // SerializeThrowExceptions
 
-//	/// <summary>
-//	/// Gets or sets whether or not serialized type information should be used when deserializing.
-//	/// The serialized values, must have been serialized with the <see cref="RpcScandinavia.Core.Shared.RpcKeyValueSerializerOptions.serializeTypeInfo" /> option set to true.
-//	/// This is required to deserialize interfaces, abstract classes and object to their original type.
-//	/// </summary>
-//	public Boolean DeserializeTypeInfo {
-//		get {
-//			return this.deserializeTypeInfo;
-//		}
-//		set {
-//			this.deserializeTypeInfo = value;
-//			this.modified = DateTime.Now;
-//		}
-//	} // DeserializeTypeInfo
-
-	/// <summary>
-	/// Gets or sets whether or not enums should be deserialized.
-	/// If this is disabled, selected enums may still be deserialized by using a custom converter.
-	/// </summary>
-	public Boolean DeserializeEnums {
-		get {
-			return this.deserializeEnums;
-		}
-		set {
-			this.deserializeEnums = value;
-			this.modified = DateTime.Now;
-		}
-	} // DeserializeEnums
-
 	/// <summary>
 	/// Gets or sets the styles used when dates and times are deserialized.
 	/// </summary>
@@ -405,6 +377,25 @@ public class RpcKeyValueSerializerOptions {
 			this.modified = DateTime.Now;
 		}
 	} // DeserializeThrowExceptions
+	#endregion
+
+	#region Methods
+	//------------------------------------------------------------------------------------------------------------------
+	// Methods.
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Adds a custom Key/Value serializer converter to the options.
+	/// </summary>
+	/// <param name="converter">The custom converter.</param>
+	public void AddConverter(RpcKeyValueSerializerConverter converter) {
+		// Validate.
+		if (converter == null) {
+			throw new NullReferenceException(nameof(converter));
+		}
+
+		// Add.
+		this.converters.Add(converter);
+	} // AddConverter
 	#endregion
 
 } // RpcKeyValueSerializerOptions

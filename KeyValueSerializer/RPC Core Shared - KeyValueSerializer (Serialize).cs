@@ -12,7 +12,10 @@ using RpcScandinavia.Core;
 //----------------------------------------------------------------------------------------------------------------------
 public static partial class RpcKeyValueSerializer {
 
-	private static void InternalSerialize(String key, Object obj, IRpcKeyValueBuilder keyValueBuilder, Boolean metaDataRequired, RpcKeyValueSerializerOptions options) {
+	private static void InternalSerialize(ReadOnlyMemory<Char> key, Object obj, IRpcKeyValueBuilder keyValueBuilder, Boolean metaDataRequired, Int32 level, RpcKeyValueSerializerOptions options) {
+		// Validate.
+		RpcKeyValueException.ValidateLevel(level, options);
+
 		// Do not serialize null.
 		if (obj == null) {
 			return;
@@ -23,7 +26,7 @@ public static partial class RpcKeyValueSerializer {
 
 		// Add metadata.
 		if ((options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.Always) ||
-			((options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop) && (keyValueBuilder.Level == 0)) ||
+			((options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop) && (level == 0)) ||
 			((options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop) && (metaDataRequired == true)) ||
 			((options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.Required) && (metaDataRequired == true))) {
 			keyValueBuilder.AddTypeMetadata(key, objType);
@@ -56,14 +59,14 @@ public static partial class RpcKeyValueSerializer {
 			for (Int32 itemIndex = 0; itemIndex < itemCount; itemIndex++) {
 				try {
 					// Serialize.
-					String valueName = itemIndex.ToString();
 					Object valueObject = objGetItemMethodInfo.Invoke(obj, new Object[] { itemIndex });
 					if (valueObject != null) {
 						RpcKeyValueSerializer.InternalSerialize(
-							valueName,
+							itemIndex.ToString().AsMemory(),
 							valueObject,
 							keyValueBuilder.AddLevel(key),
 							(itemType != valueObject.GetType()),
+							level + 1,
 							options
 						);
 					}
@@ -87,14 +90,14 @@ public static partial class RpcKeyValueSerializer {
 			for (Int32 itemIndex = 0; itemIndex < itemCount; itemIndex++) {
 				try {
 					// Serialize.
-					String valueName = itemIndex.ToString();
 					Object valueObject = objGetItemMethodInfo.Invoke(obj, new Object[] { itemIndex });
 					if (valueObject != null) {
 						RpcKeyValueSerializer.InternalSerialize(
-							valueName,
+							itemIndex.ToString().AsMemory(),
 							valueObject,
 							keyValueBuilder.AddLevel(key),
 							(itemType != valueObject.GetType()),
+							level + 1,
 							options
 						);
 					}
@@ -128,14 +131,14 @@ public static partial class RpcKeyValueSerializer {
 			foreach (Object itemIndex in keys) {
 				try {
 					// Serialize.
-					String valueName = keyConverter.InternalSerialize(itemIndex, options);
 					Object valueObject = objItemPropertyInfo.GetValue(obj, new Object[] { itemIndex });
 					if (valueObject != null) {
 						RpcKeyValueSerializer.InternalSerialize(
-							valueName,
+							keyConverter.InternalSerialize(itemIndex, options),
 							valueObject,
 							keyValueBuilder.AddLevel(key),
 							(itemType != valueObject.GetType()),
+							level + 1,
 							options
 						);
 					}
@@ -169,10 +172,11 @@ public static partial class RpcKeyValueSerializer {
 						// Serialize.
 						Object valueObject = ((Enum)obj).HasFlag(keyEnum);
 						RpcKeyValueSerializer.InternalSerialize(
-							itemIndex.ToString(),
+							itemIndex.ToString().AsMemory(),
 							valueObject,
 							keyValueBuilder.AddLevel(key),
 							false,
+							level + 1,
 							options
 						);
 					}
@@ -186,58 +190,74 @@ public static partial class RpcKeyValueSerializer {
 		//--------------------------------------------------------------------------------------------------------------
 		// Object.
 		//--------------------------------------------------------------------------------------------------------------
-		foreach (FieldInfo fieldInfo in obj.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			try {
-				if ((fieldInfo.Name.Contains("k__BackingField") == false) &&
-					(fieldInfo.GetSerializerIgnore() == false) &&
-//					(fieldInfo.GetSerializerInclude() == true) &&
-					(
-						((fieldInfo.GetMemberIsPublic() == true) && (options.IncludePublicFields == true)) ||
-						((fieldInfo.GetMemberIsPrivate() == true) && (options.IncludePrivateFields == true))
-					)
-				) {
-					// Serialize.
-					String valueName = fieldInfo.GetSerializerName();
-					Object valueObject = fieldInfo.GetValue(obj);
-					if (valueObject != null) {
-						RpcKeyValueSerializer.InternalSerialize(
-							valueName,
-							valueObject,
-							keyValueBuilder.AddLevel(key),
-							(fieldInfo.FieldType.Equals(valueObject.GetType()) == false),
-							options
-						);
+		if ((options.IncludePublicFields == true) || (options.IncludePrivateFields == true)) {
+			RpcSimpleStaticCache<String, Type, IEnumerable<FieldInfo>> fieldInfoCache = new RpcSimpleStaticCache<String, Type, IEnumerable<FieldInfo>>(
+				RpcKeyValueSerializer.CacheIsolation,
+				(type) => type
+					.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+					.Where((fieldInfo) => (fieldInfo.Name.Contains("k__BackingField") == false))
+			);
+
+			foreach (FieldInfo fieldInfo in fieldInfoCache.GetValue(obj.GetType())) {
+				try {
+					if ((fieldInfo.GetSerializerIgnore() == false) &&
+//						(fieldInfo.GetSerializerInclude() == true) &&
+						(
+							((fieldInfo.GetMemberIsPublic() == true) && (options.IncludePublicFields == true)) ||
+							((fieldInfo.GetMemberIsPrivate() == true) && (options.IncludePrivateFields == true))
+						)
+					) {
+						// Serialize.
+						Object valueObject = fieldInfo.GetValue(obj);
+						if (valueObject != null) {
+							RpcKeyValueSerializer.InternalSerialize(
+								fieldInfo.GetSerializerName().AsMemory(),
+								valueObject,
+								keyValueBuilder.AddLevel(key),
+								(fieldInfo.FieldType.Equals(valueObject.GetType()) == false),
+								level + 1,
+								options
+							);
+						}
 					}
+				} catch (Exception exception) {
+					throw new RpcKeyValueException($"Unable to serialize field '{fieldInfo.Name}' of type {fieldInfo.FieldType.Name}: {exception.Message}", RpcKeyValueExceptionType.Item);
 				}
-			} catch (Exception exception) {
-				throw new RpcKeyValueException($"Unable to serialize field '{fieldInfo.Name}' of type {fieldInfo.FieldType.Name}: {exception.Message}", RpcKeyValueExceptionType.Item);
 			}
 		}
 
-		foreach (PropertyInfo propertyInfo in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			try {
-				if ((propertyInfo.GetSerializerIgnore() == false) &&
-//					(propertyInfo.GetSerializerInclude() == true) &&
-					(
-						((propertyInfo.GetMemberIsPublicSet() == true) && (options.IncludePublicProperties == true)) ||
-						((propertyInfo.GetMemberIsPrivateSet() == true) && (options.IncludePrivateProperties == true))
-					)
-				) {
-					// Serialize.
-					String valueName = propertyInfo.GetSerializerName();
-					Object valueObject = propertyInfo.GetValue(obj);
-					if (valueObject != null) {
-						RpcKeyValueSerializer.InternalSerialize(
-							valueName,
-							valueObject,
-							keyValueBuilder.AddLevel(key),
-							(propertyInfo.PropertyType.Equals(valueObject.GetType()) == false),
-							options
-						);
+		if ((options.IncludePublicProperties == true) || (options.IncludePrivateProperties == true)) {
+			RpcSimpleStaticCache<String, Type, IEnumerable<PropertyInfo>> propertyInfoCache = new RpcSimpleStaticCache<String, Type, IEnumerable<PropertyInfo>>(
+				RpcKeyValueSerializer.CacheIsolation,
+				(type) => type
+					.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+			);
+
+			foreach (PropertyInfo propertyInfo in propertyInfoCache.GetValue(obj.GetType())) {
+				try {
+					if ((propertyInfo.GetSerializerIgnore() == false) &&
+//						(propertyInfo.GetSerializerInclude() == true) &&
+						(
+							((propertyInfo.GetMemberIsPublicSet() == true) && (options.IncludePublicProperties == true)) ||
+							((propertyInfo.GetMemberIsPrivateSet() == true) && (options.IncludePrivateProperties == true))
+						)
+					) {
+						// Serialize.
+						Object valueObject = propertyInfo.GetValue(obj);
+						if (valueObject != null) {
+							RpcKeyValueSerializer.InternalSerialize(
+								propertyInfo.GetSerializerName().AsMemory(),
+								valueObject,
+								keyValueBuilder.AddLevel(key),
+								(propertyInfo.PropertyType.Equals(valueObject.GetType()) == false),
+								level + 1,
+								options
+							);
+						}
 					}
+				} catch (Exception exception) {
+					throw new RpcKeyValueException($"Unable to serialize property '{propertyInfo.Name}' of type {propertyInfo.PropertyType.Name}: {exception.Message}", RpcKeyValueExceptionType.Item);
 				}
-			} catch (Exception exception) {
-				throw new RpcKeyValueException($"Unable to serialize property '{propertyInfo.Name}' of type {propertyInfo.PropertyType.Name}: {exception.Message}", RpcKeyValueExceptionType.Item);
 			}
 		}
 	} // InternalSerialize

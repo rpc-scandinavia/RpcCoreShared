@@ -23,8 +23,8 @@ public class RpcKeyValueSerializerConverterCultureInfo : RpcKeyValueSerializerCo
 	/// <param name="object">The culture information.</param>
 	/// <param name="options">The options.</param>
 	/// <returns>The culture information converted into a string value.</returns>
-	public override String Serialize(CultureInfo obj, RpcKeyValueSerializerOptions options) {
-		return obj.ToString();
+	public override ReadOnlyMemory<Char> Serialize(CultureInfo obj, RpcKeyValueSerializerOptions options) {
+		return obj.ToString().AsMemory();
 	} // Serialize
 
 	/// <summary>
@@ -33,9 +33,9 @@ public class RpcKeyValueSerializerConverterCultureInfo : RpcKeyValueSerializerCo
 	/// <param name="value">The string value.</param>
 	/// <param name="options">The options.</param>
 	/// <returns>The string value converted into a culture information.</returns>
-	public override CultureInfo Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
+	public override CultureInfo Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
 		try {
-			return new CultureInfo(value);
+			return new CultureInfo(value.Span.ToString());
 		} catch {
 			return CultureInfo.InvariantCulture;
 		}

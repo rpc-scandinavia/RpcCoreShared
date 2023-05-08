@@ -14,10 +14,13 @@ using RpcScandinavia.Core;
 public static partial class RpcKeyValueSerializer {
 
 	private static IRpcKeyValueInfo GotoValue(Object obj, ReadOnlyMemory<Char> path, RpcKeyValueSerializerOptions options) {
-		return RpcKeyValueSerializer.GotoValue(obj, path, path, options);
+		return RpcKeyValueSerializer.GotoValue(obj, path, path, 0, options);
 	} // GotoValue
 
-	private static IRpcKeyValueInfo GotoValue(Object obj, ReadOnlyMemory<Char> remainingPath, ReadOnlyMemory<Char> fullPath, RpcKeyValueSerializerOptions options) {
+	private static IRpcKeyValueInfo GotoValue(Object obj, ReadOnlyMemory<Char> remainingPath, ReadOnlyMemory<Char> fullPath, Int32 level, RpcKeyValueSerializerOptions options) {
+		// Validate.
+		RpcKeyValueException.ValidateLevel(level, options);
+
 		// Can't goto item in null.
 		if (obj == null) {
 			return null;
@@ -66,7 +69,7 @@ public static partial class RpcKeyValueSerializer {
 				} else {
 					// Goto next key in the path.
 					Object valueObject = objGetItemMethodInfo.Invoke(obj, new Object[] { itemIndex });
-					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, options);
+					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, level + 1, options);
 				}
 			}
 		}
@@ -96,7 +99,7 @@ public static partial class RpcKeyValueSerializer {
 				} else {
 					// Goto next key in the path.
 					Object valueObject = objGetItemMethodInfo.Invoke(obj, new Object[] { itemIndex });
-					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, options);
+					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, level + 1, options);
 				}
 			}
 		}
@@ -122,7 +125,7 @@ public static partial class RpcKeyValueSerializer {
 			}
 
 			// Goto.
-			Object itemIndex = keyConverter.InternalDeserialize(key.ToString(), keyType, options);
+			Object itemIndex = keyConverter.InternalDeserialize(key, keyType, options);
 			Boolean itemCount = (Boolean)objContainsKeyMethodInfo.Invoke(obj, new Object[] { itemIndex });
 			if (itemCount == true) {
 				if (remainingPath.Length == 0) {
@@ -137,7 +140,7 @@ public static partial class RpcKeyValueSerializer {
 				} else {
 					// Goto next key in the path.
 					Object valueObject = objItemPropertyInfo.GetValue(obj, new Object[] { itemIndex });
-					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, options);
+					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, level + 1, options);
 				}
 			}
 		}
@@ -191,39 +194,43 @@ public static partial class RpcKeyValueSerializer {
 		//--------------------------------------------------------------------------------------------------------------
 		// Object.
 		//--------------------------------------------------------------------------------------------------------------
-		FieldInfo fieldInfo = objType.GetField(key.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-		if (fieldInfo != null) {
-			if (remainingPath.Length == 0) {
-				// Return.
-				return new RpcKeyValueInfo(
-					fullPath,
-					key,
-					fieldInfo.FieldType,
-					() => fieldInfo.GetValue(obj),
-					(itemValue) => fieldInfo.SetValue(obj, itemValue)
-				);
-			} else {
-				// Goto next key in the path.
-				Object valueObject = fieldInfo.GetValue(obj);
-				return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, options);
+		if ((options.IncludePublicFields == true) || (options.IncludePrivateFields == true)) {
+			FieldInfo fieldInfo = objType.GetField(key.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			if (fieldInfo != null) {
+				if (remainingPath.Length == 0) {
+					// Return.
+					return new RpcKeyValueInfo(
+						fullPath,
+						key,
+						fieldInfo.FieldType,
+						() => fieldInfo.GetValue(obj),
+						(itemValue) => fieldInfo.SetValue(obj, itemValue)
+					);
+				} else {
+					// Goto next key in the path.
+					Object valueObject = fieldInfo.GetValue(obj);
+					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, level + 1, options);
+				}
 			}
 		}
 
-		PropertyInfo propertyInfo = objType.GetProperty(key.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-		if (propertyInfo != null) {
-			if (remainingPath.Length == 0) {
-				// Return.
-				return new RpcKeyValueInfo(
-					fullPath,
-					key,
-					propertyInfo.PropertyType,
-					() => propertyInfo.GetValue(obj),
-					(itemValue) => propertyInfo.SetValue(obj, itemValue)
-				);
-			} else {
-				// Goto next key in the path.
-				Object valueObject = propertyInfo.GetValue(obj);
-				return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, options);
+		if ((options.IncludePublicProperties == true) || (options.IncludePrivateProperties == true)) {
+			PropertyInfo propertyInfo = objType.GetProperty(key.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			if (propertyInfo != null) {
+				if (remainingPath.Length == 0) {
+					// Return.
+					return new RpcKeyValueInfo(
+						fullPath,
+						key,
+						propertyInfo.PropertyType,
+						() => propertyInfo.GetValue(obj),
+						(itemValue) => propertyInfo.SetValue(obj, itemValue)
+					);
+				} else {
+					// Goto next key in the path.
+					Object valueObject = propertyInfo.GetValue(obj);
+					return RpcKeyValueSerializer.GotoValue(valueObject, remainingPath, fullPath, level + 1, options);
+				}
 			}
 		}
 

@@ -17,13 +17,13 @@ public class RpcKeyValueSerializerConverterEnum : RpcKeyValueSerializerConverter
 	} // CanConvert
 
 	/// <inheritdoc />
-	public override String Serialize(Enum obj, RpcKeyValueSerializerOptions options) {
-		return RpcKeyValueSerializerEnumExtensions.GetEnumUnderlayingValue(obj, options).ToString();
+	public override ReadOnlyMemory<Char> Serialize(Enum obj, RpcKeyValueSerializerOptions options) {
+		return RpcKeyValueSerializerEnumExtensions.GetEnumUnderlayingValue(obj, options).ToString().AsMemory();
 	} // Serialize
 
 	/// <inheritdoc />
-	public override Enum Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
-		return (Enum)RpcKeyValueSerializerEnumExtensions.GetEnum(type, value);
+	public override Enum Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
+		return (Enum)RpcKeyValueSerializerEnumExtensions.GetEnum(type, value.Span.ToString());
 	} // Deserialize
 
 } // RpcKeyValueSerializerConverterEnum

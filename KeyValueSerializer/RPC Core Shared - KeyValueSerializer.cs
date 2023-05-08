@@ -10,14 +10,15 @@ using System.Linq;
 /// <summary>
 /// RPC Key/Value serializator serializes and deserializes objects to and from a list of key/value objects.
 /// It can serialize and deserialize to and from a list of <see cref="System.Collections.Generic.KeyValuePair" /> with
-/// a string key and string value. It can serialize and deserialize to and from a list of any type you choose, when you
-/// provide the appropiate functions/expressions to get and set the key and value:
+/// a <see cref="System.Memory{System.Char}" /> key and <see cref="System.Memory{System.Char}" /> value.
+/// It can also serialize and deserialize to and from a list of any type you choose, when you provide the appropiate
+/// functions/expressions to get and set the key and value:
 ///
-/// * Func<String, String, KeyValueType> createKeyValueInstance
-/// * Func<KeyValueType, String> getKey
-/// * Func<KeyValueType, String> getValue
+/// * Func<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>, KeyValueType> createKeyValueInstance
+/// * Func<KeyValueType, ReadOnlyMemory<Char>> getKey
+/// * Func<KeyValueType, ReadOnlyMemory<Char>> getValue
 ///
-/// The following property attributes are honored, and overrides the JSON attributes:
+/// /// The following property attributes are honored, and overrides the JSON attributes:
 /// 	<see cref="RpcScandinavia.Core.Shared.KeyValueSerializer.RpcKeyValueSerializerGroupAttribute" />
 ///
 /// The following JSON property attributes are honored:
@@ -28,6 +29,7 @@ using System.Linq;
 /// 	<see cref="RpcScandinavia.Core.Shared.KeyValueSerializer.JsonGroupAttribute" />
 /// </summary>
 public static partial class RpcKeyValueSerializer {
+	private const String CacheIsolation = "RpcScandinavia.Core.Shared.RpcKeyValueSerializer";
 	private static RpcKeyValueSerializerOptions defaultOptions = new RpcKeyValueSerializerOptions();
 
 	#region Copy methods
@@ -48,23 +50,22 @@ public static partial class RpcKeyValueSerializer {
 
 		// Setup the serializer options.
 		RpcKeyValueSerializerOptions keyValueSerializerOptions = new RpcKeyValueSerializerOptions();
-		keyValueSerializerOptions.SerializeTypeInfo = RpcKeyValueSerializerTypeInfoOption.Always;
+		keyValueSerializerOptions.SerializeTypeInfo = RpcKeyValueSerializerTypeInfoOption.RequiredAndTop;
 		keyValueSerializerOptions.SerializeEnums = RpcKeyValueSerializerEnumOption.AsInteger;
 		keyValueSerializerOptions.SerializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowAll;
-		keyValueSerializerOptions.DeserializeEnums = true;
 		keyValueSerializerOptions.DeserializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowAll;
 
 		// Serialize the object into key/values.
-		List<KeyValuePair<String, String>> values = RpcKeyValueSerializer.Serialize(obj, keyValueSerializerOptions);
+		List<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> values = RpcKeyValueSerializer.SerializeToMemory(obj, keyValueSerializerOptions);
 
 		// Deserialize the key/values into a new object instance.
-		return RpcKeyValueSerializer.Deserialize<T>(values, keyValueSerializerOptions);
+		return RpcKeyValueSerializer.DeserializeFromMemory<T>(values, keyValueSerializerOptions);
 	} // Copy
 	#endregion
 
-	#region Serialize methods
+	#region Serialize methods (KeyValuePair<String, String>)
 	//------------------------------------------------------------------------------------------------------------------
-	// Serialize methods.
+	// Serialize methods (KeyValuePair<String, String>).
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Serializes the object into a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key
@@ -72,7 +73,7 @@ public static partial class RpcKeyValueSerializer {
 	/// </summary>
 	/// <param name="obj">The opject to serialize.</param>
 	/// <returns>The list of serialized key/value items.</returns>
-	public static List<KeyValuePair<String, String>> Serialize(Object obj) {
+	public static List<KeyValuePair<String, String>> SerializeToStrings(Object obj) {
 		// Validate.
 		if (obj == null) {
 			throw new NullReferenceException(nameof(obj));
@@ -80,18 +81,19 @@ public static partial class RpcKeyValueSerializer {
 
 		// Serialize the object into key/values.
 		RpcKeyValueBuilder<KeyValuePair<String, String>> keyValueBuilder = new RpcKeyValueBuilder<KeyValuePair<String, String>>(
-			(String key, String value) => new KeyValuePair<String, String>(key, value),
+			(ReadOnlyMemory<Char> key, ReadOnlyMemory<Char> value) => new KeyValuePair<String, String>(key.ToString(), value.ToString()),
 			RpcKeyValueSerializer.defaultOptions
 		);
 		RpcKeyValueSerializer.InternalSerialize(
-			String.Empty,
+			ReadOnlyMemory<Char>.Empty,
 			obj,
 			keyValueBuilder,
 			(RpcKeyValueSerializer.defaultOptions.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop),
+			0,
 			RpcKeyValueSerializer.defaultOptions
 		);
 		return keyValueBuilder.Values;
-	} // Serialize
+	} // SerializeToStrings
 
 	/// <summary>
 	/// Serializes the object into a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key
@@ -100,7 +102,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="obj">The opject to serialize.</param>
 	/// <param name="options">The serialization options.</param>
 	/// <returns>The list of serialized key/value items.</returns>
-	public static List<KeyValuePair<String, String>> Serialize(Object obj, RpcKeyValueSerializerOptions options) {
+	public static List<KeyValuePair<String, String>> SerializeToStrings(Object obj, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (obj == null) {
 			throw new NullReferenceException(nameof(obj));
@@ -113,19 +115,92 @@ public static partial class RpcKeyValueSerializer {
 
 		// Serialize the object into key/values.
 		RpcKeyValueBuilder<KeyValuePair<String, String>> keyValueBuilder = new RpcKeyValueBuilder<KeyValuePair<String, String>>(
-			(String key, String value) => new KeyValuePair<String, String>(key, value),
+			(ReadOnlyMemory<Char> key, ReadOnlyMemory<Char> value) => new KeyValuePair<String, String>(key.ToString(), value.ToString()),
 			options
 		);
 		RpcKeyValueSerializer.InternalSerialize(
-			String.Empty,
+			ReadOnlyMemory<Char>.Empty,
 			obj,
 			keyValueBuilder,
 			(options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop),
+			0,
 			options
 		);
 		return keyValueBuilder.Values;
-	} // Serialize
+	} // SerializeToStrings
+	#endregion
 
+	#region Serialize methods (KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>)
+	//------------------------------------------------------------------------------------------------------------------
+	// Serialize methods (KeyValuePair<String, String>).
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Serializes the object into a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a <see cref="System.Memory{System.Char}" /> key
+	/// and <see cref="System.Memory{System.Char}" /> value.
+	/// </summary>
+	/// <param name="obj">The opject to serialize.</param>
+	/// <returns>The list of serialized key/value items.</returns>
+	public static List<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> SerializeToMemory(Object obj) {
+		// Validate.
+		if (obj == null) {
+			throw new NullReferenceException(nameof(obj));
+		}
+
+		// Serialize the object into key/values.
+		RpcKeyValueBuilder<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> keyValueBuilder = new RpcKeyValueBuilder<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(
+			(ReadOnlyMemory<Char> key, ReadOnlyMemory<Char> value) => new KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>(key, value),
+			RpcKeyValueSerializer.defaultOptions
+		);
+		RpcKeyValueSerializer.InternalSerialize(
+			ReadOnlyMemory<Char>.Empty,
+			obj,
+			keyValueBuilder,
+			(RpcKeyValueSerializer.defaultOptions.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop),
+			0,
+			RpcKeyValueSerializer.defaultOptions
+		);
+		return keyValueBuilder.Values;
+	} // SerializeToMemory
+
+	/// <summary>
+	/// Serializes the object into a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a <see cref="System.Memory{System.Char}" /> key
+	/// and <see cref="System.Memory{System.Char}" /> value.
+	/// </summary>
+	/// <param name="obj">The opject to serialize.</param>
+	/// <param name="options">The serialization options.</param>
+	/// <returns>The list of serialized key/value items.</returns>
+	public static List<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> SerializeToMemory(Object obj, RpcKeyValueSerializerOptions options) {
+		// Validate.
+		if (obj == null) {
+			throw new NullReferenceException(nameof(obj));
+		}
+
+		// Get the default options.
+		if (options == null) {
+			options = RpcKeyValueSerializer.defaultOptions;
+		}
+
+		// Serialize the object into key/values.
+		RpcKeyValueBuilder<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> keyValueBuilder = new RpcKeyValueBuilder<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(
+			(ReadOnlyMemory<Char> key, ReadOnlyMemory<Char> value) => new KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>(key, value),
+			options
+		);
+		RpcKeyValueSerializer.InternalSerialize(
+			ReadOnlyMemory<Char>.Empty,
+			obj,
+			keyValueBuilder,
+			(options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop),
+			0,
+			options
+		);
+		return keyValueBuilder.Values;
+	} // SerializeToMemory
+	#endregion
+
+	#region Serialize methods (KeyValueType)
+	//------------------------------------------------------------------------------------------------------------------
+	// Serialize methods (KeyValueType).
+	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Serializes the object into a list of KeyValueType.
 	/// </summary>
@@ -133,7 +208,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="createKeyValueInstance">A function that initializes a new KeyValueType with the key (first argument) and value (second argument).</param>
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
 	/// <returns>The list of serialized key/value items.</returns>
-	public static List<KeyValueType> Serialize<KeyValueType>(Object obj, Func<String, String, KeyValueType> createKeyValueInstance) {
+	public static List<KeyValueType> Serialize<KeyValueType>(Object obj, Func<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>, KeyValueType> createKeyValueInstance) {
 		// Validate.
 		if (obj == null) {
 			throw new NullReferenceException(nameof(obj));
@@ -148,10 +223,11 @@ public static partial class RpcKeyValueSerializer {
 			RpcKeyValueSerializer.defaultOptions
 		);
 		RpcKeyValueSerializer.InternalSerialize(
-			String.Empty,
+			ReadOnlyMemory<Char>.Empty,
 			obj,
 			keyValueBuilder,
 			(RpcKeyValueSerializer.defaultOptions.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop),
+			0,
 			RpcKeyValueSerializer.defaultOptions
 		);
 		return keyValueBuilder.Values;
@@ -165,7 +241,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="options">The serialization options.</param>
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
 	/// <returns>The list of serialized key/value items.</returns>
-	public static List<KeyValueType> Serialize<KeyValueType>(Object obj, Func<String, String, KeyValueType> createKeyValueInstance, RpcKeyValueSerializerOptions options) {
+	public static List<KeyValueType> Serialize<KeyValueType>(Object obj, Func<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>, KeyValueType> createKeyValueInstance, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (obj == null) {
 			throw new NullReferenceException(nameof(obj));
@@ -185,19 +261,20 @@ public static partial class RpcKeyValueSerializer {
 			options
 		);
 		RpcKeyValueSerializer.InternalSerialize(
-			String.Empty,
+			ReadOnlyMemory<Char>.Empty,
 			obj,
 			keyValueBuilder,
 			(options.SerializeTypeInfo == RpcKeyValueSerializerTypeInfoOption.RequiredAndTop),
+			0,
 			options
 		);
 		return keyValueBuilder.Values;
 	} // Serialize
 	#endregion
 
-	#region Deserialize methods
+	#region Deserialize methods (KeyValuePair<String, String>)
 	//------------------------------------------------------------------------------------------------------------------
-	// Deserialize methods.
+	// Deserialize methods (KeyValuePair<String, String>).
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key and string
@@ -206,7 +283,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="values">The previously serialized key/value items.</param>
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
 	/// <returns>A new instance of T with the deserialized values.</returns>
-	public static T Deserialize<T>(IEnumerable<KeyValuePair<String, String>> values) {
+	public static T DeserializeFromStrings<T>(IEnumerable<KeyValuePair<String, String>> values) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -225,9 +302,10 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			default(T),
 			keyValueProvider,
+			0,
 			RpcKeyValueSerializer.defaultOptions
 		);
-	} // Deserialize
+	} // DeserializeFromStrings
 
 	/// <summary>
 	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key and string
@@ -237,7 +315,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="options">The serialization options.</param>
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
 	/// <returns>A new instance of T with the deserialized values.</returns>
-	public static T Deserialize<T>(IEnumerable<KeyValuePair<String, String>> values, RpcKeyValueSerializerOptions options) {
+	public static T DeserializeFromStrings<T>(IEnumerable<KeyValuePair<String, String>> values, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -261,9 +339,10 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			default(T),
 			keyValueProvider,
+			0,
 			options
 		);
-	} // Deserialize
+	} // DeserializeFromStrings
 
 	/// <summary>
 	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key and string
@@ -272,7 +351,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="values">The previously serialized key/value items.</param>
 	/// <param name="obj">The object to deserialize into.</param>
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
-	public static void Deserialize<T>(IEnumerable<KeyValuePair<String, String>> values, T obj) {
+	public static void DeserializeFromStrings<T>(IEnumerable<KeyValuePair<String, String>> values, T obj) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -294,9 +373,10 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			obj,
 			keyValueProvider,
+			0,
 			RpcKeyValueSerializer.defaultOptions
 		);
-	} // Deserialize
+	} // DeserializeFromStrings
 
 	/// <summary>
 	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key and string
@@ -306,7 +386,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="obj">The object to deserialize into.</param>
 	/// <param name="options">The serialization options.</param>
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
-	public static void Deserialize<T>(IEnumerable<KeyValuePair<String, String>> values, T obj, RpcKeyValueSerializerOptions options) {
+	public static void DeserializeFromStrings<T>(IEnumerable<KeyValuePair<String, String>> values, T obj, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -333,13 +413,166 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			obj,
 			keyValueProvider,
+			0,
 			options
 		);
-	} // Deserialize
+	} // DeserializeFromStrings
+	#endregion
+
+	#region Deserialize methods (KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>)
+	//------------------------------------------------------------------------------------------------------------------
+	// Deserialize methods (KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>).
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a <see cref="System.Memory{System.Char}" /> key
+	/// and <see cref="System.Memory{System.Char}" /> value, into a new instance of the the specified type.
+	/// </summary>
+	/// <param name="values">The previously serialized key/value items.</param>
+	/// <typeparam name="T">The type of the deserialized object.</typeparam>
+	/// <returns>A new instance of T with the deserialized values.</returns>
+	public static T DeserializeFromMemory<T>(IEnumerable<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> values) {
+		// Validate.
+		if (values == null) {
+			throw new NullReferenceException(nameof(values));
+		}
+
+		// Parse the values.
+		RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> keyValueProvider = new RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(
+			values,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Key,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Value,
+			RpcKeyValueSerializer.defaultOptions
+		);
+
+		// Deserialize into the object.
+		return (T)RpcKeyValueSerializer.InternalDeserialize(
+			typeof(T),
+			default(T),
+			keyValueProvider,
+			0,
+			RpcKeyValueSerializer.defaultOptions
+		);
+	} // DeserializeFromMemory
 
 	/// <summary>
-	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a string key and string
-	/// value, into a new instance of the the specified type.
+	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a <see cref="System.Memory{System.Char}" /> key
+	/// and <see cref="System.Memory{System.Char}" /> value, into a new instance of the the specified type.
+	/// </summary>
+	/// <param name="values">The previously serialized key/value items.</param>
+	/// <param name="options">The serialization options.</param>
+	/// <typeparam name="T">The type of the deserialized object.</typeparam>
+	/// <returns>A new instance of T with the deserialized values.</returns>
+	public static T DeserializeFromMemory<T>(IEnumerable<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> values, RpcKeyValueSerializerOptions options) {
+		// Validate.
+		if (values == null) {
+			throw new NullReferenceException(nameof(values));
+		}
+
+		// Get the default options.
+		if (options == null) {
+			options = RpcKeyValueSerializer.defaultOptions;
+		}
+
+		// Parse the values.
+		RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> keyValueProvider = new RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(
+			values,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Key,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Value,
+			options
+		);
+
+		// Deserialize into the object.
+		return (T)RpcKeyValueSerializer.InternalDeserialize(
+			typeof(T),
+			default(T),
+			keyValueProvider,
+			0,
+			options
+		);
+	} // DeserializeFromMemory
+
+	/// <summary>
+	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a <see cref="System.Memory{System.Char}" /> key
+	/// and <see cref="System.Memory{System.Char}" /> value, into the specified object.
+	/// </summary>
+	/// <param name="values">The previously serialized key/value items.</param>
+	/// <param name="obj">The object to deserialize into.</param>
+	/// <typeparam name="T">The type of the deserialized object.</typeparam>
+	public static void DeserializeFromMemory<T>(IEnumerable<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> values, T obj) {
+		// Validate.
+		if (values == null) {
+			throw new NullReferenceException(nameof(values));
+		}
+		if (obj == null) {
+			throw new NullReferenceException(nameof(obj));
+		}
+
+		// Parse the values.
+		RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> keyValueProvider = new RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(
+			values,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Key,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Value,
+			RpcKeyValueSerializer.defaultOptions
+		);
+
+		// Deserialize into the object.
+		RpcKeyValueSerializer.InternalDeserialize(
+			typeof(T),
+			obj,
+			keyValueProvider,
+			0,
+			RpcKeyValueSerializer.defaultOptions
+		);
+	} // DeserializeFromMemory
+
+	/// <summary>
+	/// Deserializes the a list of <see cref="System.Collections.Generic.KeyValuePair" /> with a <see cref="System.Memory{System.Char}" /> key
+	/// and <see cref="System.Memory{System.Char}" /> value, into the specified object.
+	/// </summary>
+	/// <param name="values">The previously serialized key/value items.</param>
+	/// <param name="obj">The object to deserialize into.</param>
+	/// <param name="options">The serialization options.</param>
+	/// <typeparam name="T">The type of the deserialized object.</typeparam>
+	public static void DeserializeFromMemory<T>(IEnumerable<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> values, T obj, RpcKeyValueSerializerOptions options) {
+		// Validate.
+		if (values == null) {
+			throw new NullReferenceException(nameof(values));
+		}
+		if (obj == null) {
+			throw new NullReferenceException(nameof(obj));
+		}
+
+		// Get the default options.
+		if (options == null) {
+			options = RpcKeyValueSerializer.defaultOptions;
+		}
+
+		// Parse the values.
+		RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> keyValueProvider = new RpcKeyValueProvider<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(
+			values,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Key,
+			(KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>> keyValue) => keyValue.Value,
+			options
+		);
+
+		// Deserialize into the object.
+		RpcKeyValueSerializer.InternalDeserialize(
+			typeof(T),
+			obj,
+			keyValueProvider,
+			0,
+			options
+		);
+	} // DeserializeFromMemory
+	#endregion
+
+	#region Deserialize methods (KeyValueType)
+	//------------------------------------------------------------------------------------------------------------------
+	// Deserialize methods (KeyValueType).
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Deserializes the a list of KeyValueType, into a new instance of the the specified type.
+	/// the specified type.
 	/// </summary>
 	/// <param name="values">The previously serialized key/value items.</param>
 	/// <param name="getKey">A function that gets the key from the KeyValueType.</param>
@@ -347,7 +580,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
 	/// <returns>A new instance of T with the deserialized values.</returns>
-	public static T Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, Func<KeyValueType, String> getKey, Func<KeyValueType, String> getValue) {
+	public static T Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, Func<KeyValueType, ReadOnlyMemory<Char>> getKey, Func<KeyValueType, ReadOnlyMemory<Char>> getValue) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -362,8 +595,8 @@ public static partial class RpcKeyValueSerializer {
 		// Parse the values.
 		RpcKeyValueProvider<KeyValueType> keyValueProvider = new RpcKeyValueProvider<KeyValueType>(
 			values,
-			(KeyValueType keyValue) => getKey(keyValue).AsMemory(),
-			(KeyValueType keyValue) => getValue(keyValue).AsMemory(),
+			(KeyValueType keyValue) => getKey(keyValue),
+			(KeyValueType keyValue) => getValue(keyValue),
 			RpcKeyValueSerializer.defaultOptions
 		);
 
@@ -372,6 +605,7 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			default(T),
 			keyValueProvider,
+			0,
 			RpcKeyValueSerializer.defaultOptions
 		);
 	} // Deserialize
@@ -386,7 +620,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
 	/// <returns>A new instance of T with the deserialized values.</returns>
-	public static T Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, Func<KeyValueType, String> getKey, Func<KeyValueType, String> getValue, RpcKeyValueSerializerOptions options) {
+	public static T Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, Func<KeyValueType, ReadOnlyMemory<Char>> getKey, Func<KeyValueType, ReadOnlyMemory<Char>> getValue, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -406,8 +640,8 @@ public static partial class RpcKeyValueSerializer {
 		// Parse the values.
 		RpcKeyValueProvider<KeyValueType> keyValueProvider = new RpcKeyValueProvider<KeyValueType>(
 			values,
-			(KeyValueType keyValue) => getKey(keyValue).AsMemory(),
-			(KeyValueType keyValue) => getValue(keyValue).AsMemory(),
+			(KeyValueType keyValue) => getKey(keyValue),
+			(KeyValueType keyValue) => getValue(keyValue),
 			options
 		);
 
@@ -416,6 +650,7 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			default(T),
 			keyValueProvider,
+			0,
 			options
 		);
 	} // Deserialize
@@ -429,7 +664,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="getValue">A function that gets the value from the KeyValueType.</param>
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
-	public static void Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, T obj, Func<KeyValueType, String> getKey, Func<KeyValueType, String> getValue) {
+	public static void Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, T obj, Func<KeyValueType, ReadOnlyMemory<Char>> getKey, Func<KeyValueType, ReadOnlyMemory<Char>> getValue) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -447,8 +682,8 @@ public static partial class RpcKeyValueSerializer {
 		// Parse the values.
 		RpcKeyValueProvider<KeyValueType> keyValueProvider = new RpcKeyValueProvider<KeyValueType>(
 			values,
-			(KeyValueType keyValue) => getKey(keyValue).AsMemory(),
-			(KeyValueType keyValue) => getValue(keyValue).AsMemory(),
+			(KeyValueType keyValue) => getKey(keyValue),
+			(KeyValueType keyValue) => getValue(keyValue),
 			RpcKeyValueSerializer.defaultOptions
 		);
 
@@ -457,6 +692,7 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			obj,
 			keyValueProvider,
+			0,
 			RpcKeyValueSerializer.defaultOptions
 		);
 	} // Deserialize
@@ -471,7 +707,7 @@ public static partial class RpcKeyValueSerializer {
 	/// <param name="options">The serialization options.</param>
 	/// <typeparam name="T">The type of the deserialized object.</typeparam>
 	/// <typeparam name="KeyValueType">The type of the key/value items.</typeparam>
-	public static void Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, T obj, Func<KeyValueType, String> getKey, Func<KeyValueType, String> getValue, RpcKeyValueSerializerOptions options) {
+	public static void Deserialize<T, KeyValueType>(IEnumerable<KeyValueType> values, T obj, Func<KeyValueType, ReadOnlyMemory<Char>> getKey, Func<KeyValueType, ReadOnlyMemory<Char>> getValue, RpcKeyValueSerializerOptions options) {
 		// Validate.
 		if (values == null) {
 			throw new NullReferenceException(nameof(values));
@@ -494,8 +730,8 @@ public static partial class RpcKeyValueSerializer {
 		// Parse the values.
 		RpcKeyValueProvider<KeyValueType> keyValueProvider = new RpcKeyValueProvider<KeyValueType>(
 			values,
-			(KeyValueType keyValue) => getKey(keyValue).AsMemory(),
-			(KeyValueType keyValue) => getValue(keyValue).AsMemory(),
+			(KeyValueType keyValue) => getKey(keyValue),
+			(KeyValueType keyValue) => getValue(keyValue),
 			options
 		);
 
@@ -504,6 +740,7 @@ public static partial class RpcKeyValueSerializer {
 			typeof(T),
 			obj,
 			keyValueProvider,
+			0,
 			options
 		);
 	} // Deserialize

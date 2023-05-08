@@ -82,7 +82,9 @@ public class RpcKeyValueProvider<KeyValueType> : IRpcKeyValueProvider {
 		}
 	} // Parse
 
+	//------------------------------------------------------------------------------------------------------------------
 	// IRpcKeyValueProvider
+	//------------------------------------------------------------------------------------------------------------------
 	public ReadOnlyMemory<Char> GetTypeMetadata() {
 		return this.items.GetTypeMetadata();
 	} // GetTypeMetadata

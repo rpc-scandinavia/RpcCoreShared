@@ -1,11 +1,7 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Security;
-using System.Text;
-using System.Text.RegularExpressions;
 namespace RpcScandinavia.Core.Shared;
+using System;
+using System.Globalization;
+using System.Text;
 
 #region RpcCoreExtensions
 //----------------------------------------------------------------------------------------------------------------------
@@ -13,6 +9,7 @@ namespace RpcScandinavia.Core.Shared;
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
 /// The RpcCoreExtensions class contains usefull extension methods for a lot of the basic classes.
+///
 /// Some of this code is old, from before Linq and .NET framework version 4.
 ///
 /// Insted of String.Split you can use the ToStringArray, ToStringList extension methods.
@@ -30,27 +27,37 @@ static public partial class RpcCoreExtensions {
 	private static GregorianCalendar gregorianCalendar = new GregorianCalendar();
 
 	/// <summary>
-	/// The default char used to separate multiple strings, for instance when converting
-	/// between String collections and String.
-	/// The default is newline.
-	/// </summary>
-	public static String StringSeparator = Environment.NewLine;
-
-	/// <summary>
 	/// The default chars used to separate multiple strings, for instance when converting
 	/// between String and String collections.
-	/// The default is newline.
 	/// </summary>
-	public static String[] StringSeparators = new String[] { "\r", "\n", "\r\n", Environment.NewLine };
+	public static String[] StringSeparators = new String[] {
+		RpcCoreSharedConstants.STRING_RETURN,
+		RpcCoreSharedConstants.STRING_NEWLINE,
+		RpcCoreSharedConstants.STRING_RETURN_NEWLINE,
+		Environment.NewLine
+	};
 
 	/// <summary>
 	/// The string values that is accepted as "true".
 	/// </summary>
-	public static String[] TrueValues = new String[] { "true", "1", "on", "yes", "enable", "enabled", "success", "ok", "okay" };
+	public static String[] TrueValues = new String[] {
+		RpcCoreSharedConstants.STRING_1,
+		RpcCoreSharedConstants.STRING_TRUE,
+		RpcCoreSharedConstants.STRING_ON,
+		RpcCoreSharedConstants.STRING_YES,
+		RpcCoreSharedConstants.STRING_ENABLE
+	};
 
 	/// <summary>
 	/// The string values that is accepted as "false".
 	/// </summary>
-	public static String[] FalseValues = new String[] { "false", "0", "off", "no", "disable", "disabled", "failure", "err", "error" };
+	public static String[] FalseValues = new String[] {
+		RpcCoreSharedConstants.STRING_0,
+		RpcCoreSharedConstants.STRING_FALSE,
+		RpcCoreSharedConstants.STRING_OFF,
+		RpcCoreSharedConstants.STRING_NO,
+		RpcCoreSharedConstants.STRING_DISABLE
+	};
+
 } // RpcCoreExtensions
 #endregion

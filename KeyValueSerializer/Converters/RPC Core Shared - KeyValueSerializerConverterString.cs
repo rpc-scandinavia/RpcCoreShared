@@ -12,13 +12,13 @@ using System.Text;
 public class RpcKeyValueSerializerConverterString : RpcKeyValueSerializerConverter<String> {
 
 	/// <inheritdoc />
-	public override String Serialize(String obj, RpcKeyValueSerializerOptions options) {
-		return obj.NotNull();
+	public override ReadOnlyMemory<Char> Serialize(String obj, RpcKeyValueSerializerOptions options) {
+		return obj.NotNull().AsMemory();
 	} // Serialize
 
 	/// <inheritdoc />
-	public override String Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
-		return value.NotNull();
+	public override String Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
+		return value.Span.ToString();
 	} // Deserialize
 
 } // RpcKeyValueSerializerConverterString

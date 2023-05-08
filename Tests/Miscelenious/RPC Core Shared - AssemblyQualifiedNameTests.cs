@@ -91,6 +91,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(String.Empty, aqn.CultureString);
 		Assert.AreEqual(String.Empty, aqn.PublicKeyTokenString);
 		Assert.AreEqual(null, aqn.Type);
+		Assert.AreEqual(true, aqn.IsEmpty);
 	} // TestAssemblyQualifiedNameWithNormalType
 
 	[TestMethod]

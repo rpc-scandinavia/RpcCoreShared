@@ -46,21 +46,21 @@ public abstract class RpcKeyValueSerializerConverter {
 	public abstract Boolean CanConvert(Type type);
 
 	/// <summary>
-	/// Serializes a object of the type this converter can serialize to a string.
+	/// Serializes a object of the type this converter can serialize to a <see cref="System.Memory{System.Char}" />.
 	/// </summary>
 	/// <param name="obj">The value object.</param>
 	/// <param name="options">The serializer options.</param>
-	/// <returns>The object serialized to a string.</returns>
-	internal abstract String InternalSerialize(Object obj, RpcKeyValueSerializerOptions options);
+	/// <returns>The object serialized to a memory.</returns>
+	internal abstract ReadOnlyMemory<Char> InternalSerialize(Object obj, RpcKeyValueSerializerOptions options);
 
 	/// <summary>
-	/// Deserializes a string to a object of the type this converter can deserialize to.
+	/// Deserializes a <see cref="System.Memory{System.Char}" /> to a object of the type this converter can deserialize to.
 	/// </summary>
-	/// <param name="value">The string.</param>
+	/// <param name="value">The serialized memory.</param>
 	/// <param name="type">The preferred type.</param>
 	/// <param name="options">The serializer options.</param>
-	/// <returns>The string deserialized to a value object.</returns>
-	internal abstract Object InternalDeserialize(String value, Type type, RpcKeyValueSerializerOptions options);
+	/// <returns>The memory deserialized to a value object.</returns>
+	internal abstract Object InternalDeserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options);
 	#endregion
 
 } // RpcKeyValueSerializerConverter
@@ -71,10 +71,11 @@ public abstract class RpcKeyValueSerializerConverter {
 // RpcKeyValueSerializerConverter<T>.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// A RPC Key/Value serializer converter, serializes and deserializes a object of a specifig type, to and from a string.
+/// A RPC Key/Value serializer converter, serializes and deserializes a object of a specifig type, to and from
+/// a <see cref="System.Memory{System.Char}" />.
 ///
 /// Inherit this class and override the "Serialize" and "Deserialize" methods, to serialize and deserialize the type
-/// to and from a string value.
+/// to and from a <see cref="System.Memory{System.Char}" /> value.
 ///
 /// This class has build in tool for serializing and deserializing multiple strings.
 /// To serialize:
@@ -88,19 +89,17 @@ public abstract class RpcKeyValueSerializerConverter {
 ///
 /// To deserialize:
 /// 	base.ClearStrings(value);
-/// 	String str = base.GetStringNextDeserialize();
+/// 	ReadOnlyMemory<Char>? str = base.GetStringNextDeserialize();
 /// 	...
 /// Or (get five strings or null in each loop):
 /// 	base.ClearStrings(value);
-/// 	String[] strings = base.GetStringNextDeserialize(5);
+/// 	ReadOnlyMemory<Char>[] strings = base.GetStringNextDeserialize(5);
 /// 	...
 /// </summary>
 /// <typeparam name="T">The object type.</typeparam>
 public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerConverter {
 	private StringBuilder serializeStringBuilder;
-	private String deserializeString;
-	private Int32 indexStart;
-	private Int32 indexSpace;
+	private ReadOnlyMemory<Char> deserializeString;
 
 	#region Overridden methods
 	//------------------------------------------------------------------------------------------------------------------
@@ -112,12 +111,12 @@ public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerC
 	} // CanConvert
 
 	/// <inheritdoc />
-	internal override String InternalSerialize(Object obj, RpcKeyValueSerializerOptions options) {
+	internal override ReadOnlyMemory<Char> InternalSerialize(Object obj, RpcKeyValueSerializerOptions options) {
 		return this.Serialize((T)obj, options);
 	} // InternalSerialize
 
 	/// <inheritdoc />
-	internal override Object InternalDeserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
+	internal override Object InternalDeserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
 		return this.Deserialize(value, type, options);
 	} // InternalDeserialize
 	#endregion
@@ -127,21 +126,21 @@ public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerC
 	// Abstract methods.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
-	/// Serialize (convert) the T object into a string value.
+	/// Serialize (convert) the T object into a <see cref="System.Memory{System.Char}" /> value.
 	/// </summary>
 	/// <param name="obj">The object.</param>
 	/// <param name="options">The serializer options.</param>
-	/// <returns>The object as a string value.</returns>
-	public abstract String Serialize(T obj, RpcKeyValueSerializerOptions options);
+	/// <returns>The object as a <see cref="System.Memory{System.Char}" /> value.</returns>
+	public abstract ReadOnlyMemory<Char> Serialize(T obj, RpcKeyValueSerializerOptions options);
 
 	/// <summary>
-	/// Deserialize (parse) the string value into a T object.
+	/// Deserialize (parse) the <see cref="System.Memory{System.Char}" /> value into a T object.
 	/// </summary>
-	/// <param name="value">The string value.</param>
+	/// <param name="value">The <see cref="System.Memory{System.Char}" /> value.</param>
 	/// <param name="type">The preferred type.</param>
 	/// <param name="options">The serializer options.</param>
 	/// <returns>The object.</returns>
-	public abstract T Deserialize(String value, Type type, RpcKeyValueSerializerOptions options);
+	public abstract T Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options);
 	#endregion
 
 	#region Multiple strings helper methods
@@ -152,11 +151,9 @@ public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerC
 	/// Clear the multiple strings builder.
 	/// Clear the multiple strings iterator.
 	/// </summary>
-	protected void ClearStrings(String deserializeString = null) {
+	protected void ClearStrings(ReadOnlyMemory<Char> deserializeString = default(ReadOnlyMemory<Char>)) {
 		this.serializeStringBuilder = new StringBuilder();
-		this.deserializeString = deserializeString ?? "";
-		this.indexStart = 0;
-		this.indexSpace = this.deserializeString.IndexOf(' ', this.indexStart);
+		this.deserializeString = deserializeString;
 	} // ClearStrings
 
 	/// <summary>
@@ -166,52 +163,55 @@ public abstract class RpcKeyValueSerializerConverter<T> : RpcKeyValueSerializerC
 	protected void AppendString(String str) {
 		// Append the string like this: <length><space><string><newline>
 		if (str != null) {
-			this.serializeStringBuilder.AppendDelim($"{str.Length} {str}", "\n");
+			this.serializeStringBuilder.AppendDelimiter($"{str.Length} {str}", RpcCoreSharedConstants.STRING_NEWLINE);
 		} else {
-			this.serializeStringBuilder.AppendDelim($"0 ", "\n");
+			this.serializeStringBuilder.AppendDelimiter($"0 ", RpcCoreSharedConstants.STRING_NEWLINE);
 		}
 	} // AppendString
 
 	/// <summary>
-	/// Get all the appended strings, from the multiple strings builder, as one string.
+	/// Get all the appended strings, from the multiple strings builder, as one <see cref="System.Memory{System.Char}" />.
 	/// Ready and safe to serialize.
 	/// </summary>
 	/// <returns></returns>
-	protected String GetStringForSerialize() {
-		return this.serializeStringBuilder.ToString();
+	protected ReadOnlyMemory<Char> GetStringForSerialize() {
+		return this.serializeStringBuilder.ToString().AsMemory();
 	} // GetStringForSerialize
 
 	/// <summary>
 	/// Gets the next string, from the multiple strings iterator.
 	/// </summary>
 	/// <returns>The next deserialized string, or null.</returns>
-	protected String GetStringNextDeserialize() {
-		if ((this.indexStart > -1) && (this.indexSpace > this.indexStart)) {
+	protected ReadOnlyMemory<Char>? GetStringNextDeserialize() {
+		Int32 indexSpace = this.deserializeString.Span.IndexOf(RpcCoreSharedConstants.CHAR_SPACE);
+		if (indexSpace > 0) {
 			// Get the string.
-			Int32 length = this.deserializeString.Substring(this.indexStart, this.indexSpace - this.indexStart).ToInt32(0);
-			String str = this.deserializeString.Substring(this.indexSpace + 1, length);									// +1 is the " " (space).
+			Int32 length = Int32.Parse(this.deserializeString.Slice(0, indexSpace).Span);
+			ReadOnlyMemory<Char> str = this.deserializeString.Slice(indexSpace + 1, length);	// +1 is the " " (space).
 
 			// Iterate.
-			this.indexStart = this.indexSpace + length + 1;																// +1 is the "\n" (newline).
-			this.indexSpace = this.deserializeString.IndexOf(' ', this.indexStart);
+			this.deserializeString = this.deserializeString.Slice(indexSpace + length + 1);		// +1 is the "\n" (newline).
 
+			// Return the next string.
 			return str;
-		} else {
-			return null;
 		}
+
+		// No more strings.
+		return null;
 	} // GetStringNextDeserialize
 
 	/// <summary>
 	/// Gets the specified number of next strings, from the multiple strings iterator.
 	/// </summary>
 	/// <returns>The specified number of next deserialized string, or null.</returns>
-	protected String[] GetStringNextDeserialize(Int32 count) {
-		String[] result = new String[count];
+	protected ReadOnlyMemory<Char>[] GetStringNextDeserialize(Int32 count) {
+		ReadOnlyMemory<Char>[] result = new ReadOnlyMemory<Char>[count];
 		for (Int32 index = 0; index < count; index++) {
-			result[index] = this.GetStringNextDeserialize();
-
-			// Return null, when the specified number of strings are not available.
-			if (result[index] == null) {
+			ReadOnlyMemory<Char>? resultString = this.GetStringNextDeserialize();
+			if (resultString != null) {
+				result[index] = (ReadOnlyMemory<Char>)resultString;
+			} else {
+				// Return null, when the specified number of strings are not available.
 				return null;
 			}
 		}

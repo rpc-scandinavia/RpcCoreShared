@@ -11,15 +11,13 @@ using System.Collections.Generic;
 /// </summary>
 public interface IRpcKeyValueBuilder {
 
-	public Int32 Level { get; }
-
 	public RpcKeyValueSerializerOptions Options { get; }
 
-	public IRpcKeyValueBuilder AddLevel(String key);
+	public IRpcKeyValueBuilder AddLevel(ReadOnlyMemory<Char> key);
 
-	public void Add(String key, String value);
+	public void Add(ReadOnlyMemory<Char> key, ReadOnlyMemory<Char> value);
 
-	public void AddTypeMetadata(String key, Type type);
+	public void AddTypeMetadata(ReadOnlyMemory<Char> key, Type type);
 
 } // IRpcKeyValueBuilder
 #endregion

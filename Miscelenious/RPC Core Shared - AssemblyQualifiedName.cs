@@ -15,17 +15,6 @@ using System.Text;
 /// It uses a <see cref="System.Memory{System.Char}" /> to parse the Assembly Qualified Name.
 /// </summary>
 public class RpcAssemblyQualifiedName {
-	private const Char Char0 = '0';
-	private const Char Char1 = '1';
-	private const Char Char2 = '2';
-	private const Char Char3 = '3';
-	private const Char Char4 = '4';
-	private const Char Char5 = '5';
-	private const Char Char6 = '6';
-	private const Char Char7 = '7';
-	private const Char Char8 = '8';
-	private const Char Char9 = '9';
-	private const Char CharSpace = ' ';
 	private const Char CharSeparator = ',';
 	private const Char CharBeginArray = '[';
 	private const Char CharEndArray = ']';
@@ -177,16 +166,16 @@ public class RpcAssemblyQualifiedName {
 			Int32 numberIndex = index;
 			Int32 numberLength = 0;
 			while (index < this.assemblyQualifiedName.Length) {
-				if ((this.assemblyQualifiedName.Span[index] == Char0) ||
-					(this.assemblyQualifiedName.Span[index] == Char1) ||
-					(this.assemblyQualifiedName.Span[index] == Char2) ||
-					(this.assemblyQualifiedName.Span[index] == Char3) ||
-					(this.assemblyQualifiedName.Span[index] == Char4) ||
-					(this.assemblyQualifiedName.Span[index] == Char5) ||
-					(this.assemblyQualifiedName.Span[index] == Char6) ||
-					(this.assemblyQualifiedName.Span[index] == Char7) ||
-					(this.assemblyQualifiedName.Span[index] == Char8) ||
-					(this.assemblyQualifiedName.Span[index] == Char9)) {
+				if ((this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_0) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_1) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_2) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_3) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_4) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_5) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_6) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_7) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_8) ||
+					(this.assemblyQualifiedName.Span[index] == RpcCoreSharedConstants.CHAR_9)) {
 					// Found number.
 					numberLength++;
 
@@ -235,7 +224,7 @@ public class RpcAssemblyQualifiedName {
 					// Iterate generic separator.
 					if (aqnIndex < aqnCount - 1) {
 						this.ParseTrim(ref index, CharSeparator);
-						this.ParseTrim(ref index, CharSpace);
+						this.ParseTrim(ref index, RpcCoreSharedConstants.CHAR_SPACE);
 					}
 				}
 
@@ -282,7 +271,7 @@ public class RpcAssemblyQualifiedName {
 
 		// Iterate separator and whitespace characters.
 		this.ParseTrim(ref index, CharSeparator);
-		this.ParseTrim(ref index, CharSpace);
+		this.ParseTrim(ref index, RpcCoreSharedConstants.CHAR_SPACE);
 
 		// 3.
 		(partIndex, partLength, partExitChar) = this.ParsePart(ref index, String.Empty, CharSeparator, CharEndGeneric, Char.MinValue);
@@ -334,7 +323,7 @@ public class RpcAssemblyQualifiedName {
 			}
 
 			// Iterate whitespace characters.
-			this.ParseTrim(ref index, CharSpace);
+			this.ParseTrim(ref index, RpcCoreSharedConstants.CHAR_SPACE);
 
 			// Return the part data.
 			return (partIndex, partLength, exitChar);
@@ -539,37 +528,27 @@ public class RpcAssemblyQualifiedName {
 	// BaseType methods.
 	//------------------------------------------------------------------------------------------------------------------
 	private Type GetBaseType() {
-/*
-		return RpcAssemblyQualifiedName.typeCache.Get(
-			this.typePart.ToString(),
-			this.Assembly
-		);
-*/
 		String typeName = this.typePart.ToString();
 		Type type = Type.GetType(typeName, false);
 
-		//
+		// Try to get the type using the assembly.
 		if (type == null) {
 			Assembly assembly = this.Assembly;
 			if (assembly != null) {
 				type = assembly.GetType(typeName, false);
 			}
 		}
+
+		// Try to get the type using the RPC Activator.
 
 		return type;
 	} // getBaseType
 
 	private Type GetGenericBaseType() {
-/*
-		return RpcAssemblyQualifiedName.typeCache.Get(
-			$"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}",
-			this.Assembly
-		);
-*/
 		String typeName = $"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}";
 		Type type = Type.GetType(typeName, false);
 
-		//
+		// Try to get the type using the assembly.
 		if (type == null) {
 			Assembly assembly = this.Assembly;
 			if (assembly != null) {
@@ -577,14 +556,36 @@ public class RpcAssemblyQualifiedName {
 			}
 		}
 
+		// Try to get the type using the RPC Activator.
+
 		return type;
 	} // GetGenericBaseType
 	#endregion
 
-	#region Natural properties
+	#region Properties
 	//------------------------------------------------------------------------------------------------------------------
-	// Natural properties.
+	// Properties.
 	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets a value indicating whether or not the assembly qualified name is empty.
+	/// </summary>
+	public Boolean IsEmpty {
+		get {
+			return (
+				(this.typePart.Length == 0) &&
+				(this.assemblyNamePart.Length == 0)
+				/*
+					assemblyQualifiedName;
+					typePart;
+					assemblyNamePart;
+					assemblyVersionPart;
+					assemblyCulturePart;
+					assemblyPublicKeyPart;
+				*/
+			);
+		}
+	} // IsEmpty
+
 	/*
 	public String BaseTypeName {
 		get {
@@ -601,18 +602,19 @@ public class RpcAssemblyQualifiedName {
 			return this.Type?.GetTypeInfo() ?? null;
 		}
 	} // TypeInfo
+	#endregion
 
+	#region Natural properties
+	//------------------------------------------------------------------------------------------------------------------
+	// Natural properties.
+	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Gets the type, or null if the type can't be created.
 	/// </summary>
 	public Type Type {
 		get {
 			if (this.typePart.Length > 0) {
-//				Type type = null;
-				Type type = RpcAssemblyQualifiedName.typeCache.Get(this);
-				if (type != null) {
-					return type;
-				}
+				Type type = null;
 
 				// Create the array type.
 				if (this.isArray == 1) {
@@ -638,9 +640,6 @@ public class RpcAssemblyQualifiedName {
 				if ((this.isArray == 0) && (this.isGeneric == false)) {
 					type = this.GetBaseType();
 				}
-
-				// Add the type to the type cache.
-				RpcAssemblyQualifiedName.typeCache.Add(this, type);
 
 				// Return the type.
 				return type;

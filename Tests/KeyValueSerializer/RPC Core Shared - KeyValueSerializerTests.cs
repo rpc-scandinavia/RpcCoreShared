@@ -10,57 +10,70 @@ using RpcScandinavia.Core.Shared;
 
 [TestClass]
 public class RpcKeyValueSerializerTests {
+	public static Boolean WriteComparing = false;
 
 	public RpcKeyValueSerializerTests() {
 	} // RpcKeyValueSerializerTests
 
 	[TestMethod]
-	public void TestSerialize() {
+	public void TestSerializeString() {
 		// Get result and the test data.
-		List<KeyValuePair<String, String>> result = this.GetTestResult().ToList();
+		List<KeyValuePair<String, String>> result = this.GetTestResultString().ToList();
 		DataA data = this.GetTestData();
-
-		// Setup the serializer options.
-		RpcKeyValueSerializerOptions keyValueSerializerOptions = new RpcKeyValueSerializerOptions();
-		keyValueSerializerOptions.SerializeTypeInfo = RpcKeyValueSerializerTypeInfoOption.Always;
-		keyValueSerializerOptions.SerializeEnums = RpcKeyValueSerializerEnumOption.AsInteger;
-		keyValueSerializerOptions.SerializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowAll;
-		keyValueSerializerOptions.DeserializeEnums = true;
-		keyValueSerializerOptions.DeserializeThrowExceptions = RpcKeyValueSerializerExceptionOption.ThrowAll;
 
 		// Serialize.
 		//List<KeyValuePair<String, String>> serialized = this.GetTestResult();
-		List<KeyValuePair<String, String>> serialized = RpcKeyValueSerializer.Serialize(data);
-//		List<KeyValuePair<String, String>> serialized1 = RpcKeyValueSerializer.Serialize(data, keyValueSerializerOptions);
-
-File.WriteAllLines(
-	"/data/users/rpc@rpc-scandinavia.dk/Desktop/Linux/Serialized test.txt",
-	serialized
-		.ConvertAll<String>((keyValue) => $"{keyValue.Key} = {keyValue.Value}")
-		.ToList()
-);
+		List<KeyValuePair<String, String>> serialized = RpcKeyValueSerializer.SerializeToStrings(data);
 
 		// Assert.
 		Assert.AreEqual<Int32>(result.Count, serialized.Count);
 		for (Int32 index = 0; index < result.Count; index++) {
 			Assert.AreEqual<KeyValuePair<String, String>>(result[index], serialized[index]);
 		}
-	} // TestSerialize
+	} // TestSerializeString
 
 	[TestMethod]
-	public void TestDeSerialize() {
+	public void TestSerializeMemory() {
+		// Get result and the test data.
+		List<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> result = this.GetTestResultMemory().ToList();
+		DataA data = this.GetTestData();
+
+		// Serialize.
+		List<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> serialized = RpcKeyValueSerializer.SerializeToMemory(data);
+
+		// Assert.
+		Assert.AreEqual<Int32>(result.Count, serialized.Count);
+		for (Int32 index = 0; index < result.Count; index++) {
+			Assert.AreEqual<String>(result[index].ToString(), serialized[index].ToString());
+			//Assert.AreEqual<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>(result[index], serialized[index]);
+		}
+	} // TestSerializeMemory
+
+	[TestMethod]
+	public void TestDeSerializeString() {
 		// Get result and the test data.
 		DataA result = this.GetTestData();
-		List<KeyValuePair<String, String>> data = this.GetTestResult().ToList();
+		List<KeyValuePair<String, String>> data = this.GetTestResultString().ToList();
 
 		// DeSerialize.
-		//DataA deserialized = this.GetTestData();
-		DataA deserialized = RpcKeyValueSerializer.Deserialize<DataA>(data);
-		//deserialized.Comments.Last().Value = "I am changed!";
+		DataA deserialized = RpcKeyValueSerializer.DeserializeFromStrings<DataA>(data);
 
 		// Assert.
 		Assert.AreEqual<DataA>(result, deserialized);
-	} // TestDeSerialize
+	} // TestDeSerializeString
+
+	[TestMethod]
+	public void TestDeSerializeMemory() {
+		// Get result and the test data.
+		DataA result = this.GetTestData();
+		List<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>> data = this.GetTestResultMemory().ToList();
+
+		// DeSerialize.
+		DataA deserialized = RpcKeyValueSerializer.DeserializeFromMemory<DataA>(data);
+
+		// Assert.
+		Assert.AreEqual<DataA>(result, deserialized);
+	} // TestDeSerializeMemory
 
 	[TestMethod]
 	public void TestCopy() {
@@ -79,7 +92,7 @@ File.WriteAllLines(
 	public void TestGetValues() {
 		// Get the test data.
 		DataA data = this.GetTestData();
-		List<KeyValuePair<String, String>> text = this.GetTestResult().ToList();
+		List<KeyValuePair<String, String>> text = this.GetTestResultString().ToList();
 
 		// Assert.
 		Assert.AreEqual<String>(
@@ -120,7 +133,7 @@ File.WriteAllLines(
 	public void TestSetValues() {
 		// Get the test data.
 		DataA data = this.GetTestData();
-		List<KeyValuePair<String, String>> text = this.GetTestResult().ToList();
+		List<KeyValuePair<String, String>> text = this.GetTestResultString().ToList();
 
 		// Assert.
 		RpcKeyValueSerializer.SetMemberValue(data, text[4].Key, "qwerty");
@@ -194,7 +207,7 @@ File.WriteAllLines(
 		);
 	} // GetTestData
 
-	public KeyValuePair<String, String>[] GetTestResult() {
+	public KeyValuePair<String, String>[] GetTestResultString() {
 		return new KeyValuePair<String, String>[] {
 			new KeyValuePair<String, String>("$Type", "RpcScandinavia.Core.Shared.Tests.KeyValueSerializer.DataA, RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
 			new KeyValuePair<String, String>("Id", "1234"),
@@ -279,7 +292,14 @@ File.WriteAllLines(
 			new KeyValuePair<String, String>("Tag:EnumB:16", "False"),
 
 		};
-	} // GetTestResult
+	} // GetTestResultString
+
+	public KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>[] GetTestResultMemory() {
+		return this.GetTestResultString()
+			.ToList()
+			.ConvertAll<KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>>((keyValue) => new KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>(keyValue.Key.AsMemory(), keyValue.Value.AsMemory()))
+			.ToArray();
+	} // GetTestResultMemory
 
 } // RpcKeyValueSerializerTests
 
@@ -339,19 +359,21 @@ public class DataA : IEqualityComparer<DataA> {
 	} // GetHashCode
 
 	public Boolean Equals(DataA valueA, DataA valueB) {
-		Debug.WriteLine($"Comparing two DataA objects ({valueA != null}, {valueB != null}).");
-		Debug.WriteLine($"       Id:  {(valueA.Id.Equals(valueB.Id))}");
-		Debug.WriteLine($"     Guid:  {(valueA.Guid.Equals(valueB.Guid))}");
-		Debug.WriteLine($"     Time:  {(valueA.Time.Equals(valueB.Time))}");
-		Debug.WriteLine($"     Text:  {(valueA.Text.Equals(valueB.Text))}");
-		Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}     {valueA.Comments?.Count} / {valueB.Comments?.Count}");
-		Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}     {valueA.Abstracts?.Length} / {valueB.Abstracts?.Length}");
-		Debug.WriteLine($" Mappings:  {(valueA.Mappings.SequenceEqual(valueB.Mappings))}     {valueA.Mappings?.Count} / {valueB.Mappings?.Count}");
-		Debug.WriteLine($"   Guid L:  {(valueA.GuidList.SequenceEqual(valueB.GuidList))}     {valueA.GuidList?.Count} / {valueB.GuidList?.Count}");
-		Debug.WriteLine($"   Guid L:  {(valueA.GuidArray.SequenceEqual(valueB.GuidArray))}     {valueA.GuidArray?.Length} / {valueB.GuidArray?.Length}");
-		Debug.WriteLine($"    EnumA:  {(valueA.EnumA.Equals(valueB.EnumA))}");
-		Debug.WriteLine($"    EnumB:  {(valueA.EnumB.Equals(valueB.EnumB))}");
-		Debug.WriteLine($"      Tag:  {(valueA.Tag.EqualsForObjects(valueB.Tag))}");
+		if (RpcKeyValueSerializerTests.WriteComparing == true) {
+			Debug.WriteLine($"Comparing two DataA objects ({valueA != null}, {valueB != null}).");
+			Debug.WriteLine($"       Id:  {(valueA.Id.Equals(valueB.Id))}");
+			Debug.WriteLine($"     Guid:  {(valueA.Guid.Equals(valueB.Guid))}");
+			Debug.WriteLine($"     Time:  {(valueA.Time.Equals(valueB.Time))}");
+			Debug.WriteLine($"     Text:  {(valueA.Text.Equals(valueB.Text))}");
+			Debug.WriteLine($" Comments:  {(valueA.Comments.SequenceEqual(valueB.Comments))}     {valueA.Comments?.Count} / {valueB.Comments?.Count}");
+			Debug.WriteLine($"Abstracts:  {(valueA.Abstracts.SequenceEqual(valueB.Abstracts))}     {valueA.Abstracts?.Length} / {valueB.Abstracts?.Length}");
+			Debug.WriteLine($" Mappings:  {(valueA.Mappings.SequenceEqual(valueB.Mappings))}     {valueA.Mappings?.Count} / {valueB.Mappings?.Count}");
+			Debug.WriteLine($"   Guid L:  {(valueA.GuidList.SequenceEqual(valueB.GuidList))}     {valueA.GuidList?.Count} / {valueB.GuidList?.Count}");
+			Debug.WriteLine($"   Guid L:  {(valueA.GuidArray.SequenceEqual(valueB.GuidArray))}     {valueA.GuidArray?.Length} / {valueB.GuidArray?.Length}");
+			Debug.WriteLine($"    EnumA:  {(valueA.EnumA.Equals(valueB.EnumA))}");
+			Debug.WriteLine($"    EnumB:  {(valueA.EnumB.Equals(valueB.EnumB))}");
+			Debug.WriteLine($"      Tag:  {(valueA.Tag.EqualsForObjects(valueB.Tag))}");
+		}
 
 		return (
 			(valueA.Id.Equals(valueB.Id)) &&

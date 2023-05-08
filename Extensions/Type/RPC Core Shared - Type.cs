@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using RpcScandinavia.Core;
 
-#region RpcKeyValueSerializerTypeExtensions
+#region RpcCoreExtensions
 //----------------------------------------------------------------------------------------------------------------------
-// RpcKeyValueSerializerTypeExtensions.
+// RpcCoreExtensions.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// Extension methods for the <see cref="System.Type" /> class used by the RPC Key/Value serializer.
+/// This part of the class contains usefull extension methods for the <see cref="System.Type" /> class.
 /// </summary>
-public static class RpcKeyValueSerializerTypeExtensions {
+static public partial class RpcCoreExtensions {
 
 	/// <summary>
 	/// Gets true if the type is a enumerator.
@@ -54,5 +54,5 @@ public static class RpcKeyValueSerializerTypeExtensions {
 		return ((typeof(IList).IsAssignableFrom(type) == true) && (type.IsGenericType == false));
 	} // IsGenericList
 
-} // RpcKeyValueSerializerTypeExtensions
+} // RpcCoreExtensions
 #endregion

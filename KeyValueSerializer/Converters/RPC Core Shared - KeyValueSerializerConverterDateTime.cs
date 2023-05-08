@@ -12,14 +12,14 @@ using System.Globalization;
 public class RpcKeyValueSerializerConverterDateTime : RpcKeyValueSerializerConverter<DateTime> {
 
 	/// <inheritdoc />
-	public override String Serialize(DateTime obj, RpcKeyValueSerializerOptions options) {
+	public override ReadOnlyMemory<Char> Serialize(DateTime obj, RpcKeyValueSerializerOptions options) {
 		// Sortable pattern, "yyyy-MM-dd T HH:mm:ss".
-		return obj.ToString("o");	// "o" or "r".
+		return obj.ToString("o").AsMemory();	// "o" or "r".
 	} // Serialize
 
 	/// <inheritdoc />
-	public override DateTime Deserialize(String value, Type type, RpcKeyValueSerializerOptions options) {
-		return DateTime.Parse(value, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
+	public override DateTime Deserialize(ReadOnlyMemory<Char> value, Type type, RpcKeyValueSerializerOptions options) {
+		return DateTime.Parse(value.Span, CultureInfo.InvariantCulture.DateTimeFormat, options.DeserializeDateTimeStyles);
 	} // Deserialize
 
 } // RpcKeyValueSerializerConverterDateTime
