@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RpcScandinavia.Core.Shared;
 
@@ -50,6 +51,22 @@ public class RpcKeyValueSerializerTests {
 	} // TestSerializeMemory
 
 	[TestMethod]
+	public void TestSerializeJson() {
+		// Get result and the test data.
+		String result = this.GetTestResultJsonString();
+		DataA data = this.GetTestData();
+
+		// Serialize.
+		JsonSerializerOptions options = new JsonSerializerOptions();
+		options.WriteIndented = true;
+		String serialized = JsonSerializer.Serialize(data, options);
+
+		// Assert.
+		// This test is only included to compare time, when serializing the same data to JSON and Key/Value strings.
+		Assert.AreEqual<String>(result, serialized);
+	} // TestSerializeJson
+
+	[TestMethod]
 	public void TestDeSerializeString() {
 		// Get result and the test data.
 		DataA result = this.GetTestData();
@@ -74,6 +91,25 @@ public class RpcKeyValueSerializerTests {
 		// Assert.
 		Assert.AreEqual<DataA>(result, deserialized);
 	} // TestDeSerializeMemory
+
+	/* JsonSerializer does not support polymorphism out of the box.
+	[TestMethod]
+	public void TestDeSerializeJson() {
+		// Get result and the test data.
+		DataA result = this.GetTestData();
+		String data = this.GetTestResultJsonString();
+
+		// Serialize.
+		JsonSerializerOptions options = new JsonSerializerOptions();
+		options.TypeInfoResolver = ... your own ...
+		options.WriteIndented = true;
+		DataA deserialized = JsonSerializer.Deserialize<DataA>(data, options);
+
+		// Assert.
+		// This test is only included to compare time, when serializing the same data to JSON and Key/Value strings.
+		Assert.AreEqual<DataA>(result, deserialized);
+	} // TestDeSerializeJson
+	*/
 
 	[TestMethod]
 	public void TestCopy() {
@@ -293,6 +329,106 @@ public class RpcKeyValueSerializerTests {
 
 		};
 	} // GetTestResultString
+
+
+	public String GetTestResultJsonString() {
+		return
+$$"""
+{
+  "Id": 1234,
+  "Guid": "ff232da4-42e1-4673-b176-0049a55d5795",
+  "Time": "2000-05-04T12:34:56",
+  "Text": "This is a test object.",
+  "Comments": [
+    {
+      "Value": "I am the first comment."
+    },
+    {
+      "Value": "I am the second comment."
+    },
+    {
+      "Value": "I am the last comment."
+    }
+  ],
+  "Abstracts": [
+    {},
+    {},
+    {},
+    {}
+  ],
+  "Mappings": {
+    "100.25": {
+      "Value": 100
+    },
+    "531.03": {
+      "Value": 331
+    },
+    "999.99": {
+      "Value": 999
+    }
+  },
+  "GuidList": [
+    "00000000-0000-0000-0000-000000000000",
+    "10000000-0000-0000-0000-000000000001",
+    "20000000-0000-0000-0000-000000000002"
+  ],
+  "GuidArray": [
+    "10000000-0000-0000-0000-000000000010",
+    "11000000-0000-0000-0000-000000000011",
+    "12000000-0000-0000-0000-000000000012"
+  ],
+  "EnumA": 2,
+  "EnumB": 10,
+  "Tag": {
+    "Id": 1234,
+    "Guid": "ff232da4-42e1-4673-b176-0049a55d5795",
+    "Time": "2000-05-04T12:34:56",
+    "Text": "This is a test object.",
+    "Comments": [
+      {
+        "Value": "I am the first comment."
+      },
+      {
+        "Value": "I am the second comment."
+      },
+      {
+        "Value": "I am the last comment."
+      }
+    ],
+    "Abstracts": [
+      {},
+      {},
+      {},
+      {}
+    ],
+    "Mappings": {
+      "100.25": {
+        "Value": 100
+      },
+      "531.03": {
+        "Value": 331
+      },
+      "999.99": {
+        "Value": 999
+      }
+    },
+    "GuidList": [
+      "00000000-0000-0000-0000-000000000000",
+      "10000000-0000-0000-0000-000000000001",
+      "20000000-0000-0000-0000-000000000002"
+    ],
+    "GuidArray": [
+      "10000000-0000-0000-0000-000000000010",
+      "11000000-0000-0000-0000-000000000011",
+      "12000000-0000-0000-0000-000000000012"
+    ],
+    "EnumA": 2,
+    "EnumB": 10,
+    "Tag": null
+  }
+}
+""";
+	} // GetTestResultJsonString
 
 	public KeyValuePair<ReadOnlyMemory<Char>, ReadOnlyMemory<Char>>[] GetTestResultMemory() {
 		return this.GetTestResultString()

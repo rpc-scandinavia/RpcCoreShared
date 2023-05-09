@@ -10,7 +10,7 @@ using System.Threading;
 // RpcActivator.
 //----------------------------------------------------------------------------------------------------------------------
 public static class RpcActivator {
-	private const String CacheIsolation = "RpcScandinavia.Core.Shared.RpcActivator";
+	public const String CacheIsolation = "RpcScandinavia.Core.Shared.RpcActivator";
 
 	#region Create instance methods
 	//------------------------------------------------------------------------------------------------------------------

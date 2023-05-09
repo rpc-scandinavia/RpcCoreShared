@@ -343,7 +343,7 @@ public class RpcAssemblyQualifiedName {
 	/// Gets the string representation of this Assembly Qualified Name.
 	/// </summary>
 	public override string ToString() {
-		return this.assemblyQualifiedName.Span.Slice(this.indexBegin, this.indexLength).ToString();
+		return this.assemblyQualifiedName.Slice(this.indexBegin, this.indexLength).ToString();
 	} // ToString
 	#endregion
 
@@ -526,37 +526,59 @@ public class RpcAssemblyQualifiedName {
 	// BaseType methods.
 	//------------------------------------------------------------------------------------------------------------------
 	private Type GetBaseType() {
-		String typeName = this.typePart.ToString();
-		Type type = Type.GetType(typeName, false);
+		// Get the type.
+		// Use the same simple static cache as RpcActivator.
+		RpcSimpleStaticCache<String, String, Type> typeNameCache = new RpcSimpleStaticCache<String, String, Type>(
+			RpcActivator.CacheIsolation,
+			(typeName) => {
+				Type type = Type.GetType(typeName, false);
 
-		// Try to get the type using the assembly.
-		if (type == null) {
-			Assembly assembly = this.Assembly;
-			if (assembly != null) {
-				type = assembly.GetType(typeName, false);
+				// Try to get the type using the assembly.
+				if (type == null) {
+					Assembly assembly = this.Assembly;
+					if (assembly != null) {
+						type = assembly.GetType(typeName, false);
+					}
+				}
+
+				// Try to get the type using the RPC Activator.
+				// This will scan all assemblies in the current application domain, and add the found type to the same cache.
+				if (type == null) {
+					type = RpcActivator.GetType(typeName, true);
+				}
+
+				return type;
 			}
-		}
-
-		// Try to get the type using the RPC Activator.
-
-		return type;
+		);
+		return typeNameCache.GetValue(this.typePart.ToString());
 	} // getBaseType
 
 	private Type GetGenericBaseType() {
-		String typeName = $"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}";
-		Type type = Type.GetType(typeName, false);
+		// Get the type.
+		// Use the same simple static cache as RpcActivator.
+		RpcSimpleStaticCache<String, String, Type> typeNameCache = new RpcSimpleStaticCache<String, String, Type>(
+			RpcActivator.CacheIsolation,
+			(typeName) => {
+				Type type = Type.GetType(typeName, false);
 
-		// Try to get the type using the assembly.
-		if (type == null) {
-			Assembly assembly = this.Assembly;
-			if (assembly != null) {
-				type = assembly.GetType(typeName, false);
+				// Try to get the type using the assembly.
+				if (type == null) {
+					Assembly assembly = this.Assembly;
+					if (assembly != null) {
+						type = assembly.GetType(typeName, false);
+					}
+				}
+
+				// Try to get the type using the RPC Activator.
+				// This will scan all assemblies in the current application domain, and add the found type to the same cache.
+				if (type == null) {
+					type = RpcActivator.GetType(typeName, true);
+				}
+
+				return type;
 			}
-		}
-
-		// Try to get the type using the RPC Activator.
-
-		return type;
+		);
+		return typeNameCache.GetValue($"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}");
 	} // GetGenericBaseType
 	#endregion
 
@@ -608,39 +630,49 @@ public class RpcAssemblyQualifiedName {
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
 	/// Gets the type, or null if the type can't be created.
+	/// This uses the same cache as the <see cref="RpcScandinavia.Core.Shared.RpcActivator.GetType" /> methods, and
+	/// fallback to using the <see cref="RpcScandinavia.Core.Shared.RpcAssemblyQualifiedName.Type" /> property.
 	/// </summary>
 	public Type Type {
 		get {
 			if (this.typePart.Length > 0) {
-				Type type = null;
+				// Get the type.
+				// Use the same simple static cache as RpcActivator.
+				RpcSimpleStaticCache<String, String, Type> typeNameCache = new RpcSimpleStaticCache<String, String, Type>(
+					RpcActivator.CacheIsolation,
+					(typeName) => {
+						Type type = null;
 
-				// Create the array type.
-				if (this.isArray == 1) {
-					type = this.GetBaseType();
-					type = type.MakeArrayType();
-				} else if (this.isArray > 1) {
-					type = this.GetBaseType();
-					type = type.MakeArrayType(this.isArray);
-				}
+						// Create the array type.
+						if (this.isArray == 1) {
+							type = this.GetBaseType();
+							type = type.MakeArrayType();
+						} else if (this.isArray > 1) {
+							type = this.GetBaseType();
+							type = type.MakeArrayType(this.isArray);
+						}
 
-				// Create the generic type.
-				if ((this.isGeneric == true) && (this.genericTypeArguments.Length > 0)) {
-					type = this.GetGenericBaseType();
-					type = type.MakeGenericType(
-						this.genericTypeArguments
-							.ToList()
-							.ConvertAll<Type>((genericTypeArgument) => genericTypeArgument.Type)
-							.ToArray()
-					);
-				}
+						// Create the generic type.
+						if ((this.isGeneric == true) && (this.genericTypeArguments.Length > 0)) {
+							type = this.GetGenericBaseType();
+							type = type.MakeGenericType(
+								this.genericTypeArguments
+									.ToList()
+									.ConvertAll<Type>((genericTypeArgument) => genericTypeArgument.Type)
+									.ToArray()
+							);
+						}
 
-				// Create the normal type.
-				if ((this.isArray == 0) && (this.isGeneric == false)) {
-					type = this.GetBaseType();
-				}
+						// Create the normal type.
+						if ((this.isArray == 0) && (this.isGeneric == false)) {
+							type = this.GetBaseType();
+						}
 
-				// Return the type.
-				return type;
+						// Return the type.
+						return type;
+					}
+				);
+				return typeNameCache.GetValue(this.AssemblyQualifiedNameString);
 			} else {
 				return null;
 			}
@@ -719,9 +751,18 @@ public class RpcAssemblyQualifiedName {
 	// Memory properties.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
+	/// Gets the parsed assembly qualified name.
+	/// </summary>
+	public ReadOnlyMemory<Char> AssemblyQualifiedNamePart {
+		get {
+			return this.assemblyQualifiedName.Slice(this.indexBegin, this.indexLength);
+		}
+	} // AssemblyQualifiedNamePart
+
+	/// <summary>
 	/// Gets the parsed type information.
 	/// </summary>
-	internal ReadOnlyMemory<Char> TypePart {
+	public ReadOnlyMemory<Char> TypePart {
 		get {
 			return this.typePart;
 		}
@@ -730,7 +771,7 @@ public class RpcAssemblyQualifiedName {
 	/// <summary>
 	/// Gets the parsed assembly information.
 	/// </summary>
-	internal ReadOnlyMemory<Char> AssemblyPart {
+	public ReadOnlyMemory<Char> AssemblyPart {
 		get {
 			return this.assemblyNamePart;
 		}
@@ -739,7 +780,7 @@ public class RpcAssemblyQualifiedName {
 	/// <summary>
 	/// Gets the parsed version information.
 	/// </summary>
-	internal ReadOnlyMemory<Char> VersionPart {
+	public ReadOnlyMemory<Char> VersionPart {
 		get {
 			return this.assemblyVersionPart;
 		}
@@ -748,7 +789,7 @@ public class RpcAssemblyQualifiedName {
 	/// <summary>
 	/// Gets the parsed culture information.
 	/// </summary>
-	internal ReadOnlyMemory<Char> CulturePart {
+	public ReadOnlyMemory<Char> CulturePart {
 		get {
 			return this.assemblyCulturePart;
 		}
@@ -757,7 +798,7 @@ public class RpcAssemblyQualifiedName {
 	/// <summary>
 	/// Gets the parsed public key token information.
 	/// </summary>
-	internal ReadOnlyMemory<Char> PublicKeyTokenPart {
+	public ReadOnlyMemory<Char> PublicKeyTokenPart {
 		get {
 			if (this.assemblyPublicKeyPart.Span.Length == 16) {
 				return this.assemblyPublicKeyPart;
@@ -772,6 +813,15 @@ public class RpcAssemblyQualifiedName {
 	//------------------------------------------------------------------------------------------------------------------
 	// Span properties.
 	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets the parsed assembly qualified name.
+	/// </summary>
+	public ReadOnlySpan<Char> AssemblyQualifiedNameSpan {
+		get {
+			return this.assemblyQualifiedName.Slice(this.indexBegin, this.indexLength).Span;
+		}
+	} // AssemblyQualifiedNameSpan
+
 	/// <summary>
 	/// Gets the parsed type information.
 	/// </summary>
@@ -826,6 +876,15 @@ public class RpcAssemblyQualifiedName {
 	//------------------------------------------------------------------------------------------------------------------
 	// String properties.
 	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets the parsed assembly qualified name.
+	/// </summary>
+	public String AssemblyQualifiedNameString {
+		get {
+			return this.assemblyQualifiedName.Slice(this.indexBegin, this.indexLength).ToString();
+		}
+	} // AssemblyQualifiedNameString
+
 	/// <summary>
 	/// Gets the parsed type information.
 	/// </summary>

@@ -3,7 +3,7 @@
 # RpcCoreShared
 RPC Core Shared contains interfaces and common classes used in most applications from RPC Scandinavia.
 
-## RpcKeyValueSerializer
+## RpcKeyValueSerializer [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/KeyValueSerializer/RPC%20Core%20Shared%20-%20KeyValueSerializer.cs)
 RPC Key/Value Serializer can be used to serialize a object into a collection of key/value string pairs.
 
 The following features are supported:
@@ -37,7 +37,7 @@ List<KeyValuePair<String, String>> values = RpcKeyValueSerializer.Serialize(obj,
 return RpcKeyValueSerializer.Deserialize<T>(values, keyValueSerializerOptions);
 ```
 
-## RpcAssemblyQualifiedName
+## RpcAssemblyQualifiedName [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/Miscelenious/RPC%20Core%20Shared%20-%20AssemblyQualifiedName.cs)
 RPC Assembly Qualified Name is a parser that can be used to parse type names.
 The `Type` property return the type of the parsed Assembly Qualified Name, if it is available in the loaded assemblies.
 
@@ -56,3 +56,18 @@ RpcAssemblyQualifiedName aqn = new RpcAssemblyQualifiedName("System.Collections.
 // Create an instance of the generic type.
 Dictionary<String, KeyValuePair<Int32, String>> obj = (Dictionary<String, KeyValuePair<Int32, String>>)Activator.CreateInstance(aqn.Type);
 ```
+
+## RpcCoreExtensions
+RPC Core Extensions is my static methods, for extending all sort of types.
+Currently there are extension methods for:
+
+* Memory<Char>
+* Span<Char>
+* String
+* Type
+
+Note that I have a lot of old extension methods, and I will add those not available in Linq.
+
+## RpcTriple [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/Structs/RPC%20Core%20Shared%20-%20Triple.cs)
+
+RPC Triple is a struct with three states, `True`, `False` and `Unknown`.

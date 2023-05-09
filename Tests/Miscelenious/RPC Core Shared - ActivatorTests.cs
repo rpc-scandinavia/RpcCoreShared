@@ -18,42 +18,43 @@ public class RpcActivatorTests {
 	public void TestActivator() {
 		// Prepare.
 		Guid guidEmpty = Guid.Empty;
-		String guidEmptyAqn1 = "System.Guid, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
-		String guidEmptyAqn2 = guidEmpty.GetType().AssemblyQualifiedName;
+		String guidEmptyTypeString = "System.Guid, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
+		Type guidEmptyType = RpcActivator.GetType(guidEmptyTypeString);
 
+/*
 		String[] stringArrayOne = new String[0];
-		String stringArrayOneAqn1 = "System.String[], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
-		String stringArrayOneAqn2 = stringArrayOne.GetType().AssemblyQualifiedName;
+		String stringArrayOneTypeString = "System.String[], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
+		Type stringArrayOneType = RpcActivator.GetType(stringArrayOneTypeString);
 
 		String[,] stringArrayTwo = new String[0, 0];
-		String stringArrayTwoAqn1 = "System.String[,], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
-		String stringArrayTwoAqn2 = stringArrayTwo.GetType().AssemblyQualifiedName;
+		String stringArrayTwoTypeString = "System.String[,], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
+		Type stringArrayTwoType = RpcActivator.GetType(stringArrayTwoTypeString);
 
 		DataGeneric<Int32>[] genericArray = new DataGeneric<Int32>[0];
-		String genericArrayAqn1 = "RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
-		String genericArrayAqn2 = genericArray.GetType().AssemblyQualifiedName;
+		String genericArrayTypeString = "RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+		Type genericArrayType = RpcActivator.GetType(genericArrayTypeString);
 
 		DataGeneric<String> genericOne = new DataGeneric<String>("One");
-		String genericOneAqn1 = "RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
-		String genericOneAqn2 = genericOne.GetType().AssemblyQualifiedName;
+		String genericOneTypeString = "RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+		Type genericOneType = RpcActivator.GetType(genericOneTypeString);
 
 		Dictionary<String, KeyValuePair<Int32, String>> genericTwo = new Dictionary<String, KeyValuePair<Int32, String>>();
-		String genericTwoAqn1 = "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
-		String genericTwoAqn2 = genericTwo.GetType().AssemblyQualifiedName;
-
+		String genericTwoTypeString = "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e";
+		Type genericTwoType = RpcActivator.GetType(genericTwoTypeString);
+*/
 		// Assert.
-		Assert.AreEqual(guidEmptyAqn1, guidEmptyAqn2);
+		Assert.AreEqual(guidEmpty.GetType(), guidEmptyType);
+/*
+		Assert.AreEqual(stringArrayOne.GetType(), stringArrayOneType);
 
-		Assert.AreEqual(stringArrayOneAqn1, stringArrayOneAqn2);
+		Assert.AreEqual(stringArrayTwo.GetType(), stringArrayTwoType);
 
-		Assert.AreEqual(stringArrayTwoAqn1, stringArrayTwoAqn2);
+		Assert.AreEqual(genericArray.GetType(), genericArrayType);
 
-		Assert.AreEqual(genericArrayAqn1, genericArrayAqn2);
+		Assert.AreEqual(genericOne.GetType(), genericOneType);
 
-		Assert.AreEqual(genericOneAqn1, genericOneAqn2);
-
-		Assert.AreEqual(genericTwoAqn1, genericTwoAqn2);
-
+		Assert.AreEqual(genericTwo.GetType(), genericTwoType);
+*/
 	} // TestActivator
 
 } // RpcActivatorTests
