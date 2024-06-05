@@ -16,6 +16,9 @@ Currently there are extension methods for:
 
 Note that I have a lot of old extension methods, and I will add those not available in Linq.
 
+## RpcDictionaryList [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/RpcDictionaryList.cs)
+This is a dictionary, where the value is a list of values, basically a `IDictionary<TKey, List<TValue>>`.
+
 ## RpcSimpleLocalCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and RpcSimpleStaticCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
 Simple in-memory cache, that store cached values in a dictionary. When the cache do not contain the requested value, 
 the provider delegate specified in the constructor is called to get the requested value, which is added to the cache 
