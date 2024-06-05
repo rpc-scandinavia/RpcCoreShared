@@ -1,6 +1,6 @@
 <!--
-	Do not use this target directly. Instead use "General Library" for library assemblies, "General Desktop" for
-	desktop applications or "General Android" for Android applications.
+	Do not use this target directly. Instead use "Base Library" for library assemblies, "Base Desktop" for
+	desktop applications or "Base Android" for Android applications.
 -->
 <Project>
 
