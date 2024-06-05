@@ -8,9 +8,11 @@ RPC Core Shared contains interfaces and common classes used in most applications
 RPC Core Extensions is my static methods, for extending all sort of types.
 Currently there are extension methods for:
 
+* Comparer (chain comparer with `then`, and reverse with `reverse`) 
 * Memory<Char>
 * Span<Char>
 * String
+* String (hash and validate)
 * StringBuilder
 * Type
 
