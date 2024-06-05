@@ -1,0 +1,47 @@
+<!--
+	Do not use this target directly. Instead use "General Library" for library assemblies, "General Desktop" for
+	desktop applications or "General Android" for Android applications.
+-->
+<Project>
+
+	<PropertyGroup>
+		<!-- Specify the RPC solutions directory. This MUST end with a slash! -->
+		<RpcSolutionDir>/home/rpc@rpc-scandinavia.dk/Development/Solutions/</RpcSolutionDir>
+
+		<!-- Specify the RPC release directory. This MUST end with a slash! -->
+		<RpcReleaseDir>/home/rpc@rpc-scandinavia.dk/Development/Releases/</RpcReleaseDir>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>true</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Disable common warnings. -->
+		<NoWarn>$(NoWarn);MSB4011</NoWarn>					<!-- The target cannot be imported again. -->
+		<NoWarn>$(NoWarn);CS1998</NoWarn>					<!-- This async method lacks 'await'. -->
+		<NoWarn>$(NoWarn);CS8632</NoWarn>					<!-- The annotation for nullable reference types should only be used in code within a ‘#nullable’ annotations context. -->
+
+		<!-- Copy package assemblies to output directory. -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+		<!-- Configure Assembly version information. -->
+		<!--
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+		<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+		-->
+		<VersionSuffix>8.0.$([System.DateTime]::UtcNow.ToString(yy))$([System.DateTime]::UtcNow.DayOfYear.ToString(000))</VersionSuffix>
+		<Version>$(VersionSuffix)</Version>
+		<FileVersion>$(VersionSuffix)</FileVersion>
+		<AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
+		<InformationalVersion>$(VersionSuffix) | $([System.DateTime]::UtcNow.ToString(yyyy))</InformationalVersion>
+		<Authors>René Paw Christensen</Authors>
+		<Company>RPC Scandinavia\r\nGartnerengen 21, Fjellerup\r\nDK 085 85  Glæsborg\r\nScandinavia\r\n\r\nhttp://rpc-scandinavia.dk\r\ninfo@rpc-scandinavia.dk</Company>
+	</PropertyGroup>
+
+</Project>

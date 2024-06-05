@@ -1,0 +1,18 @@
+<Project>
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+
+		<NoWarn>$(NoWarn);IL3000</NoWarn>					<!-- 'System.Reflection.Assembly.Location' always returns an empty string for assemblies embedded in a single-file app. If the path to the app directory is needed, consider calling 'System.AppContext.BaseDirectory'. -->
+		<NoWarn>$(NoWarn);CS0246</NoWarn>					<!-- The type or namespace name '...' could not be found (are you missing a using directive or an assembly reference?). -->
+
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+		<PackageReference Include="MSTest.TestAdapter" Version="3.*" />
+		<PackageReference Include="MSTest.TestFramework" Version="3.*" />
+		<PackageReference Include="coverlet.collector" Version="3.*" />
+	</ItemGroup>
+</Project>

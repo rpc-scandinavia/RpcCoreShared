@@ -1,0 +1,9 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)./Base.target" />
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<OutputType>Library</OutputType>
+	</PropertyGroup>
+
+</Project>
