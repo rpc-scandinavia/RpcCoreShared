@@ -13,6 +13,6 @@ Currently there are extension methods for:
 
 Note that I have a lot of old extension methods, and I will add those not available in Linq.
 
-## RpcTriple [🔗](RpcCoreSharedPublic/Structs/Triple.cs)
+## RpcTriple [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Structs/Triple.cs)
 
 RPC Triple is a struct with three states, `True`, `False` and `Unknown`.
