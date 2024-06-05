@@ -20,14 +20,25 @@ public class RpcStringHashExtensionsTests {
 		String sha512 = Convert.ToBase64String(Convert.FromHexString("5DD9B867CDD3BE031952F31D5BAE9E4600615B2382FD2823B373DF222A897BA831795813EB7C0688B7F8D4332DB4AF1CA85BF4327BDB2343990FF82513420B47"));
 
 		// Hashed values taken from Apache Directory Studio.
-		Byte[] salt1 = Convert.FromHexString("0b9404733b334dd4");
-		String ssha1 = Convert.ToBase64String(Convert.FromHexString("d42715a6e61d0fbdb1144bb3cd7731964486716a" + "0b9404733b334dd4"));
-		Byte[] salt256 = Convert.FromHexString("db03d4fe1b781e32");
-		String ssha256 = Convert.ToBase64String(Convert.FromHexString("f8621e9a436379c07b671064325c8f3f1a8af7dce4341e7f0e3c78ecfee40350" + "db03d4fe1b781e32"));
-		Byte[] salt384 = Convert.FromHexString("2c08c6a171e6790c");
-		String ssha384 = Convert.ToBase64String(Convert.FromHexString("3f9317766ba5438fce67d7a562964ec7415f98b6e234682bc4d699780c5e8ba8f47f619e3cb8b03de741bdc7d647a027" + "2c08c6a171e6790c"));
-		Byte[] salt512 = Convert.FromHexString("3e97d4a4c6643e65");
-		String ssha512 = Convert.ToBase64String(Convert.FromHexString("9ce00022d871d5aee480738800a4e58debf1469b33a4188a37eb6c57a6e60ef58290e8d2aca2e268510b43489885a28473fa4889aab4535d96818136281527f5" + "3e97d4a4c6643e65"));
+		Byte[] salt1 = Convert.FromHexString("dfcc53c33ad10e9a");
+		String ssha1 = Convert.ToBase64String(Convert.FromHexString("31db23410511e6be6b5f1975a2136643f9f493e5" + "dfcc53c33ad10e9a"));
+		Byte[] salt256 = Convert.FromHexString("d586f54077a9ac78");
+		String ssha256 = Convert.ToBase64String(Convert.FromHexString("b3b5ff79c67de9e22948628227bc54b3ac0d8fdef5fd52abd23be0b9063e496a" + "d586f54077a9ac78"));
+		Byte[] salt384 = Convert.FromHexString("63f35e14b76f4d31");
+		String ssha384 = Convert.ToBase64String(Convert.FromHexString("3b8462a3ffd6445ef7b585a39891891928f5b0ac76d7badcfc6a75fb53e9103ba8087ea850b8ab613806fa6e75aa45ff" + "63f35e14b76f4d31"));
+		Byte[] salt512 = Convert.FromHexString("155f1bd26ca4d090");
+		String ssha512 = Convert.ToBase64String(Convert.FromHexString("18a95a9cef23dd01b458b6ad26885bfc0e77bf1b49b8817ab8e2184623d392e812ba785173a13f1f0f4395078bde55e1d634246faeabda00c3f5cec994209676" + "155f1bd26ca4d090"));
+
+		String pwdMd5 = "{MD5}7ZvBMpk+hP3NTzuzu0NPiw==";
+		String pwdSha1 = "{SHA}q1jk45pqZz0q3QFPDvF4h6wjRow=";
+		String pwdSha256 = "{SHA256}s/bOFam3fYf+aPONXlkpZFLl4MYk49cV0AaDQfFhIms=";
+		String pwdSha384 = "{SHA384}6E4tsMHoVl2s2yxwkPuZUruApaiCskTqVZ35Y8Zc6ipO4fi3IPuLcYGO7jEJJPHe";
+		String pwdSha512 = "{SHA512}Xdm4Z83TvgMZUvMdW66eRgBhWyOC/Sgjs3PfIiqJe6gxeVgT63wGiLf41DMttK8cqFv0MnvbI0OZD/glE0ILRw==";
+
+		String pwdSsha1 = "{SSHA}MdsjQQUR5r5rXxl1ohNmQ/n0k+XfzFPDOtEOmg==";
+		String pwdSsha256 = "{SSHA256}s7X/ecZ96eIpSGKCJ7xUs6wNj971/VKr0jvguQY+SWrVhvVAd6mseA==";
+		String pwdSsha384 = "{SSHA384}O4Rio//WRF73tYWjmJGJGSj1sKx217rc/Gp1+1PpEDuoCH6oULirYTgG+m51qkX/Y/NeFLdvTTE=";
+		String pwdSsha512 = "{SSHA512}GKlanO8j3QG0WLatJohb/A53vxtJuIF6uOIYRiPTkugSunhRc6E/Hw9DlQeL3lXh1jQkb66r2gDD9c7JlCCWdhVfG9JspNCQ";
 
 		// Assert.
 		Assert.AreEqual(md5, clear.ToStringHash(RpcHashAlgorithm.MD5, false));
@@ -40,6 +51,19 @@ public class RpcStringHashExtensionsTests {
 		Assert.AreEqual(ssha256, clear.ToStringHash(RpcHashAlgorithm.SSHA256, false, salt256));
 		Assert.AreEqual(ssha384, clear.ToStringHash(RpcHashAlgorithm.SSHA384, false, salt384));
 		Assert.AreEqual(ssha512, clear.ToStringHash(RpcHashAlgorithm.SSHA512, false, salt512));
+
+		Assert.IsTrue(pwdMd5.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSha1.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSha256.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSha384.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSha512.ValidateStringHash(clear));
+
+		Assert.IsTrue(pwdSsha1.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSsha256.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSsha384.ValidateStringHash(clear));
+		Assert.IsTrue(pwdSsha512.ValidateStringHash(clear));
+
+//ValidateStringHash(this String hashedValue, String clearValue) {
 
 	} // Test
 
