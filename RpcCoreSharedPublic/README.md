@@ -16,13 +16,13 @@ Currently there are extension methods for:
 
 Note that I have a lot of old extension methods, and I will add those not available in Linq.
 
-## SimpleLocalCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and SimpleStaticCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
+## RpcSimpleLocalCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and RpcSimpleStaticCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
 Simple in-memory cache, that store cached values in a dictionary. When the cache do not contain the requested value, 
-the provider delegate specified in the constructor in called to get the requested value, which is added to the cache 
+the provider delegate specified in the constructor is called to get the requested value, which is added to the cache 
 and returned.
 
-A `SemaphoreSlim` is used for thread safety. The difference between the two, are that one is a static class, and the 
-other is a normal class. 
+A `SemaphoreSlim` is used for thread safety. The difference between the two, are that one is a normal class and the
+other is a static class, which allow access to the cache from everywhere within the application. 
 
 ## Triple [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Structs/Triple.cs)
 

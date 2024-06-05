@@ -1,7 +1,7 @@
-namespace RpcScandinavia.Core.Shared;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+namespace RpcScandinavia.Core.Shared;
 
 #region RpcSimpleLocalCache
 //----------------------------------------------------------------------------------------------------------------------
@@ -9,7 +9,7 @@ using System.Threading;
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
 /// The simple local cache uses a local dictionary to cache the values. When the cache do not contain the requested
-/// value, the provider delegate specified in the constructor in called to get the requested value, which is added to
+/// value, the provider delegate specified in the constructor is called to get the requested value, which is added to
 /// the cache and returned.
 ///
 /// Note that the value provider delegate, must throw an exception when it can not find a value associated with the key.

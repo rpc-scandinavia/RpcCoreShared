@@ -2,7 +2,7 @@ using System;
 namespace RpcScandinavia.Core.Shared;
 
 /// <summary>
-/// How the <see cref="RpcScandinavia.Core.Shared.RpcSimpleLocalCache{TKey,TValue}"/> and the <see cref="RpcScandinavia.Core.Shared.RpcSimpleStaticCache{TKey,TValue}"/>
+/// How the <see cref="RpcScandinavia.Core.Shared.RpcSimpleLocalCache{TKey,TValue}"/> and the <see cref="RpcScandinavia.Core.Shared.RpcSimpleStaticCache{TIsolation,TKey,TValue}"/>
 /// handles null values, when the 'provideValue' delegate return null.
 /// </summary>
 public enum RpcSimpleCacheNullValues {

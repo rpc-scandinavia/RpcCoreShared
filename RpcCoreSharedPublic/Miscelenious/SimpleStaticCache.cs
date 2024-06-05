@@ -1,7 +1,7 @@
-namespace RpcScandinavia.Core.Shared;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+namespace RpcScandinavia.Core.Shared;
 
 #region RpcSimpleStaticCache
 //----------------------------------------------------------------------------------------------------------------------
@@ -9,7 +9,7 @@ using System.Threading;
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
 /// The simple static cache uses a static dictionary to cache the values. When the cache do not contain the requested
-/// value, the provider delegate specified in the constructor in called to get the requested value, which is added to
+/// value, the provider delegate specified in the constructor is called to get the requested value, which is added to
 /// the cache and returned.
 ///
 /// The isolation type is used to isolate the static cache, when several static caches are used at the same time with
