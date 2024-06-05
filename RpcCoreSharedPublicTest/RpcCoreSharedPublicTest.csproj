@@ -1,0 +1,14 @@
+﻿<Project Sdk = "Microsoft.NET.Sdk">
+	<Import Project="../.targets/Base Library.target" />
+	<Import Project="../.targets/Base Test.target" />
+
+	<PropertyGroup>
+		<RootNamespace>RpcScandinavia.Core.Shared.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Reference the project. -->
+		<ProjectReference Include="../RpcCoreSharedPublic/RpcCoreSharedPublic.csproj" />
+	</ItemGroup>
+
+</Project>
