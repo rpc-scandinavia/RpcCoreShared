@@ -739,6 +739,10 @@ public static partial class RpcCoreExtensions {
 	/// <param name="value">The value to convert.</param>
 	/// <returns>The converted value, or Guid.Empty on exceptions.</returns>
 	static public Guid ToGuid(this String value) {
+		if (value == null) {
+			return Guid.Empty;
+		}
+
 		try {
 			if (value.Trim().Length == 24) {
 				value					= value.Replace("_", "/");
@@ -768,6 +772,10 @@ public static partial class RpcCoreExtensions {
 	/// <param name="defaultValue">The value to return on exceptions.</param>
 	/// <returns>The converted value, or the default value on exceptions.</returns>
 	static public Guid ToGuid(this String value, Guid defaultValue) {
+		if (value == null) {
+			return defaultValue;
+		}
+
 		try {
 			if (value.Trim().Length == 24) {
 				value					= value.Replace("_", "/");

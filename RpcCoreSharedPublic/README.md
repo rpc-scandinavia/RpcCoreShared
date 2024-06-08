@@ -18,6 +18,9 @@ Currently there are extension methods for:
 
 Note that I have a lot of old extension methods, and I will add those not available in Linq.
 
+## RpcAssemblyQualifiedName [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/RpcAssemblyQualifiedName.cs)
+This is a Assembly Qualified Name parser. It uses `ReadOnlyMemory<Char>` and can compare names ignoring the assembly version, assembly culture and/or the assembly public key token.
+
 ## RpcDictionaryList [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/RpcDictionaryList.cs)
 This is a dictionary, where the value is a list of values, basically a `IDictionary<TKey, List<TValue>>`.
 
