@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 namespace RpcScandinavia.Core.Shared;
 
 #region RpcAssemblyQualifiedName
@@ -109,8 +110,9 @@ public class RpcAssemblyQualifiedName {
 		//		System.Guid, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
 		//		System.String[], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
 		//		System.String[,], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
-		//		RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-		//		RpcScandinavia.Core.Shared.Tests.Miscelenious.DataGeneric`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+		//		System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
+		//		RpcScandinavia.Core.Shared.Tests.DataGeneric`1[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+		//		RpcScandinavia.Core.Shared.Tests.DataGeneric`1[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], RpcCoreShared.test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
 		//		System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
 		//
 		// Strange examples:
@@ -129,12 +131,12 @@ public class RpcAssemblyQualifiedName {
 
 		// Parse the Assembly Qualified Name:
 		// 1)	Find the end of the type name. This is one of these characters (",", "[", "`").
-		// 2a)	Recursively get the generic type arguments. They are wrapped in "[[" and "]]"-
-		// 2b)	Get the dimensions of the array, by counting "," characters until the "]" character.
-		// 3)	Find the end of the assembly name (optional).
-		// 4)	Find the end of the assembly version (optional).
-		// 5)	Find the end of the assembly culture (optional).
-		// 6)	Find the end of the assembly public key token (optional).
+		// 2)	Recursively get the generic type arguments. They are wrapped in "[[" and "]]"-
+		// 3)	Get the dimensions of the array, by counting "," characters until the "]" character.
+		// 4)	Find the end of the assembly name (optional).
+		// 5)	Find the end of the assembly version (optional).
+		// 6)	Find the end of the assembly culture (optional).
+		// 7)	Find the end of the assembly public key token (optional).
 
 		Int32 index = this.indexBegin;
 		Int32 partIndex = 0;
@@ -156,7 +158,7 @@ public class RpcAssemblyQualifiedName {
 			this.typePart = this.assemblyQualifiedName.Slice(partIndex, partLength).Trim();
 		}
 
-		// 2a.
+		// 2.
 		if (this.isGeneric == true) {
 			// Get the number of generic type arguments.
 			Boolean beginGenericFound = false;
@@ -207,7 +209,7 @@ public class RpcAssemblyQualifiedName {
 				this.genericTypeArguments = new RpcAssemblyQualifiedName[aqnCount];
 
 				for (Int32 aqnIndex = 0; aqnIndex < aqnCount; aqnIndex++) {
-					// Iterate begen generic characters.
+					// Iterate begin generic characters.
 					this.ParseTrim(ref index, CharBeginGeneric);
 
 					// Parse the generic type.
@@ -230,7 +232,17 @@ public class RpcAssemblyQualifiedName {
 			}
 		}
 
-		// 2b.
+		// 3a.
+		// This might be a array of generic type like "List<String>()".
+		if ((this.isGeneric == true) && (index < this.assemblyQualifiedName.Length) && (this.assemblyQualifiedName.Span[index] == CharBeginArray)) {
+			// Found the beginning of array type.
+			this.isArray = 1;
+
+			// Iterate.
+			index++;
+		}
+
+		// 3b.
 		if (this.isArray > 0) {
 			// Get the array dimensions.
 			while (index < this.assemblyQualifiedName.Length) {
@@ -259,25 +271,25 @@ public class RpcAssemblyQualifiedName {
 		this.ParseTrim(ref index, CharSeparator);
 		this.ParseTrim(ref index, RpcCoreSharedConstants.CHAR_SPACE);
 
-		// 3.
+		// 4.
 		(partIndex, partLength, partExitChar) = this.ParsePart(ref index, String.Empty, CharSeparator, CharEndGeneric, Char.MinValue);
 		if (partLength > 0) {
 			this.assemblyNamePart = this.assemblyQualifiedName.Slice(partIndex, partLength).Trim();
 		}
 
-		// 4.
+		// 5.
 		(partIndex, partLength, partExitChar) = this.ParsePart(ref index, StrVersion, CharSeparator, CharEndGeneric, Char.MinValue);
 		if (partLength > 0) {
 			this.assemblyVersionPart = this.assemblyQualifiedName.Slice(partIndex, partLength).Trim();
 		}
 
-		// 5.
+		// 6.
 		(partIndex, partLength, partExitChar) = this.ParsePart(ref index, StrCulture, CharSeparator, CharEndGeneric, Char.MinValue);
 		if (partLength > 0) {
 			this.assemblyCulturePart = this.assemblyQualifiedName.Slice(partIndex, partLength).Trim();
 		}
 
-		// 6.
+		// 7.
 		(partIndex, partLength, partExitChar) = this.ParsePart(ref index, StrPublicKeyToken, CharSeparator, CharEndGeneric, Char.MinValue);
 		if (partLength > 0) {
 			this.assemblyPublicKeyPart = this.assemblyQualifiedName.Slice(partIndex, partLength).Trim();
@@ -316,7 +328,7 @@ public class RpcAssemblyQualifiedName {
 		}
 
 		// Return nothing found.
-		return (0, 0, Char.MinValue);
+		return (index, 0, Char.MinValue);
 	} // ParsePart
 
 	private void ParseTrim(ref Int32 index, Char trimChar) {
@@ -573,14 +585,6 @@ public class RpcAssemblyQualifiedName {
 		}
 	} // IsEmpty
 
-	/*
-	public String BaseTypeName {
-		get {
-			return $"{this.typePart}, {this.assemblyNamePart}, Version={this.assemblyVersionPart}, Culture={this.assemblyCulturePart}, PublicKeyToken={this.assemblyPublicKeyPart}";
-		}
-	} //
-	*/
-
 	/// <summary>
 	/// Gets the type information, or null if the type information can't be created.
 	/// </summary>
@@ -596,12 +600,68 @@ public class RpcAssemblyQualifiedName {
 	// Natural properties.
 	//------------------------------------------------------------------------------------------------------------------
 	/// <summary>
+	/// Tries to get the type from either the <see cref="System.Type.GetType"/> method or by iterating all assemblies.
+	/// </summary>
+	private Type GetType(String typeName) {
+		// Get the type from the Activator.
+		Type type = Type.GetType(typeName, false);
+		if (type != null) {
+			return type;
+		}
+
+		// Iterate all assemblies in the AppDomain, and see if a type matches.
+		foreach (TypeInfo typeInfo in RpcActivator.GetAllDomainTypes(false)) {
+			if (typeInfo.AssemblyQualifiedName.StartsWith(typeName) == true) {
+				RpcAssemblyQualifiedName typeA = new RpcAssemblyQualifiedName(typeName);
+				RpcAssemblyQualifiedName typeB = new RpcAssemblyQualifiedName(typeInfo);
+				//if (typeA.typePart.Span.SequenceEqual(typeB.typePart.Span) == true) {
+				if (typeA.EqualsType(typeB, true, true, true) == true) {
+					return typeInfo.AsType();
+				}
+			}
+		}
+
+		// The type was not found.
+		return null;
+	} // GetType
+
+	/// <summary>
 	/// Gets the type, or null if the type can't be created.
+	/// This can only return the Type, if the parsed Assembly Qualified Name is that of an existing type.
+	/// If for instance the version number is wrong, this property can not create the type, and wil return null.
 	/// </summary>
 	public Type Type {
 		get {
 			// Get the type.
-			return Type.GetType(this.AssemblyQualifiedNameString, false);
+			Type type = (this.isGeneric == false)
+				? this.GetType(this.typePart.ToString())
+				: this.GetType(this.ToString(false, false, false, false));
+
+			if (type != null) {
+				// Create the generic type.
+				// This must be done first, in case the type is an array of generic type like "List<String>()".
+				if ((this.isGeneric == true) && (this.genericTypeArguments.Length > 0)) {
+					Type[] genericTypes = new Type[this.genericTypeArguments.Length];
+					for (Int32 index = 0; index < this.genericTypeArguments.Length; index++) {
+						genericTypes[index] = this.genericTypeArguments[index].Type;
+					}
+					type = type.MakeGenericType(genericTypes);
+				}
+
+				// Create the one dimensional array type.
+				if (this.isArray == 1) {
+					// Create the one dimensional array type.
+					type = type.MakeArrayType();
+				}
+
+				// Create the multidimensional array type.
+				if (this.isArray > 1) {
+					type = type.MakeArrayType(this.isArray);
+				}
+			}
+
+			// Return the type.
+			return type;
 		}
 	} // Type
 
@@ -807,6 +867,36 @@ public class RpcAssemblyQualifiedName {
 	/// </summary>
 	public override string ToString() {
 		return this.assemblyQualifiedName.Slice(this.indexBegin, this.indexLength).ToString();
+	} // ToString
+
+	/// <summary>
+	/// Gets the string representation of this Assembly Qualified Name.
+	/// </summary>
+	/// <param name="ignoreAssembly">Specify if the assembly name should be ignored when building the string.</param>
+	/// <param name="ignoreVersion">Specify if the version should be ignored when building the string.</param>
+	/// <param name="ignoreCulture">Specify if the culture should be ignored when building the string.</param>
+	/// <param name="ignorePublicKey">Specify if the public key token should be ignored when building the string.</param>
+	public String ToString(Boolean ignoreAssembly, Boolean ignoreVersion, Boolean ignoreCulture, Boolean ignorePublicKey) {
+		StringBuilder result = new StringBuilder();
+		result.Append($"{this.typePart}{CharBeginGenericCount}{this.genericTypeArguments.Length}");
+
+		if ((ignoreAssembly == false) && (this.assemblyNamePart.Length > 0)) {
+			result.Append($", {this.assemblyNamePart}");
+		}
+
+		if ((ignoreVersion == false) && (this.assemblyVersionPart.Length > 0)) {
+			result.Append($", {StrVersion}{this.assemblyVersionPart}");
+		}
+
+		if ((ignoreCulture == false) && (this.assemblyCulturePart.Length > 0)) {
+			result.Append($", {StrCulture}{this.assemblyCulturePart}");
+		}
+
+		if ((ignorePublicKey == false) && (this.assemblyPublicKeyPart.Length > 0)) {
+			result.Append($", {StrPublicKeyToken}{this.assemblyPublicKeyPart}");
+		}
+
+		return result.ToString();
 	} // ToString
 
 	/// <summary>

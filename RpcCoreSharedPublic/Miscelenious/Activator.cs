@@ -37,10 +37,10 @@ public static class RpcActivator {
 	/// <returns>An instance of the specified type created with the parameterless constructor, or default(T) if the type is not found.</returns>
 	public static T CreateInstance<T>(String typeName, Boolean ignoreVersionCultureAndPublicKey = true) {
 		// Get the type.
-		Type cacheType = RpcActivator.GetType(typeName, ignoreVersionCultureAndPublicKey);
-		if ((cacheType != null) && (cacheType.IsAssignableTo(typeof(T)) == true)) {
+		Type type = RpcActivator.GetType(typeName, ignoreVersionCultureAndPublicKey);
+		if ((type != null) && (type.IsAssignableTo(typeof(T)) == true)) {
 			// Create a new instance, cast it to the expected type and return it.
-			return (T)Activator.CreateInstance(cacheType);
+			return (T)Activator.CreateInstance(type);
 		}
 
 		// Return default.
@@ -57,52 +57,15 @@ public static class RpcActivator {
 	/// <returns>An instance of the specified type created with the parameterless constructor, or default(T) if the type is not found.</returns>
 	public static T CreateInstance<T>(RpcAssemblyQualifiedName assemblyQualifiedName, Boolean ignoreVersionCultureAndPublicKey = true) {
 		// Get the type.
-		Type cacheType = RpcActivator.GetType(assemblyQualifiedName, ignoreVersionCultureAndPublicKey);
-		if ((cacheType != null) && (cacheType.IsAssignableTo(typeof(T)) == true)) {
+		Type type = RpcActivator.GetType(assemblyQualifiedName, ignoreVersionCultureAndPublicKey);
+		if ((type != null) && (type.IsAssignableTo(typeof(T)) == true)) {
 			// Create a new instance, cast it to the expected type and return it.
-			return (T)Activator.CreateInstance(cacheType);
+			return (T)Activator.CreateInstance(type);
 		}
 
 		// Return default.
 		return default(T);
 	} // CreateInstance
-	#endregion
-
-	#region All methods
-	//------------------------------------------------------------------------------------------------------------------
-	// All methods.
-	//------------------------------------------------------------------------------------------------------------------
-	/// <summary>
-	/// Gets an enumerator with all types from the assembly.
-	/// </summary>
-	/// <param name="assembly">The assembly.</param>
-	/// <param name="throwExceptions">Throw exceptions (true).</param>
-	/// <returns>The enumerator.</returns>
-	public static IEnumerable<TypeInfo> GetAllAssemblyTypes(Assembly assembly, Boolean throwExceptions = true) {
-		if (throwExceptions == true) {
-			return assembly.DefinedTypes;
-		} else {
-			try {
-				return assembly.DefinedTypes;
-			} catch {
-				return Enumerable.Empty<TypeInfo>();
-			}
-		}
-	} // GetAllAssemblyTypes
-
-	/// <summary>
-	/// Gets an enumerator with all types from all available assemblies in the current application domain.
-	/// </summary>
-	/// <param name="throwExceptions">Throw exceptions (true).</param>
-	/// <returns>The enumerator.</returns>
-	public static IEnumerable<TypeInfo> GetAllDomainTypes(Boolean throwExceptions = true) {
-		// Iterate through all available assemblies in the current application domain.
-		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
-			foreach (TypeInfo typeInfo in RpcActivator.GetAllAssemblyTypes(assembly, throwExceptions)) {
-				yield return typeInfo;
-			}
-		}
-	} // GetAllDomainTypes
 	#endregion
 
 	#region GetType methods
@@ -126,10 +89,7 @@ public static class RpcActivator {
 		}
 
 		// Get the type.
-		return RpcActivator.GetType(
-			new RpcAssemblyQualifiedName(typeName),
-			ignoreVersionCultureAndPublicKey
-		);
+		return RpcActivator.GetType(new RpcAssemblyQualifiedName(typeName), ignoreVersionCultureAndPublicKey);
 	} // GetType
 
 	/// <summary>
@@ -145,53 +105,100 @@ public static class RpcActivator {
 			throw new NullReferenceException(nameof(assemblyQualifiedName));
 		}
 
+		// Get the type from the Assembly Qualified Name.
+		Type type = assemblyQualifiedName.Type;
+		if (type != null) {
+			return type;
+		}
+
 		// Get the type.
 		// Use a simple static cache.
 		RpcSimpleStaticCache<String, String, Type> typeNameCache = new RpcSimpleStaticCache<String, String, Type>(
 			RpcActivator.CacheIsolation,
 			RpcSimpleCacheNullValues.DenyNullValuesAndThrow,
 			(typeName) => {
-				TypeInfo foundTypeInfo = null;
-
-				// Iterate through all available assemblies in the current application domain.
-				foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
-					// Catch exceptions like this:
-					// System.Reflection.ReflectionTypeLoadException: Unable to load one or more of the requested types.
-					// Could not load type 'SqlGuidCaster' from assembly 'Microsoft.Data.SqlClient, Version=5.0.0.0, Culture=neutral, PublicKeyToken=23ec7fc2d6eaa4a5' because it contains an object field at offset 0 that is incorrectly aligned or overlapped by a non-object field.
-					try {
-						// Iterate through all available types in the assembly.
-						foreach (TypeInfo typeInfo in assembly.DefinedTypes) {
-							// Full match.
-							// Just return when a full match is found.
-							if ((ignoreVersionCultureAndPublicKey == false) &&
-								(assemblyQualifiedName.EqualsType(typeInfo, false, false, false) == true)) {
-								return typeInfo.AsType();
-							}
-
-							// Partial match.
-							// Save the match with the highest version number.
-							if ((ignoreVersionCultureAndPublicKey == true) &&
-								(assemblyQualifiedName.EqualsType(typeInfo, true, true, true) == true)) {
-								return typeInfo.AsType();
-
-// TODO: Highest version number.
-//								(assemblyQualifiedName.Equals(typeInfo, true, true, true) == true) &&
-//								(
-//									(foundTypeInfo == null) ||
-//									(foundTypeInfo.Assembly.GetName().Version.CompareTo(assemblyQualifiedName.Version ?? new Version()) > 0)
-//								)) {
-//								foundTypeInfo = typeInfo;
-							}
-						}
-					} catch {}
-				}
-
-				// Return the partion match.
-				return foundTypeInfo?.AsType();
+				return GetTypeWithoutCache(assemblyQualifiedName, ignoreVersionCultureAndPublicKey);
 			}
 		);
+
 		return typeNameCache.GetValue(assemblyQualifiedName.ToString());
 	} // GetType
+
+	public static Type GetTypeWithoutCache(RpcAssemblyQualifiedName assemblyQualifiedName, Boolean ignoreVersionCultureAndPublicKey) {
+		// Validate.
+		if (assemblyQualifiedName == null) {
+			throw new NullReferenceException(nameof(assemblyQualifiedName));
+		}
+
+		// Get the type from the Assembly Qualified Name.
+		Type type = assemblyQualifiedName.Type;
+		if (type != null) {
+			return type;
+		}
+
+		// Get the type.
+		// Iterate through all available types in all the loaded assemblies in the current application domain.
+		foreach (TypeInfo typeInfo in RpcActivator.GetAllDomainTypes(false)) {
+			// Full match.
+			// Just return when a full match is found.
+			if ((ignoreVersionCultureAndPublicKey == false) &&
+				(assemblyQualifiedName.EqualsType(typeInfo, false, false, false) == true)) {
+				return typeInfo.AsType();
+			}
+
+			// Partial match.
+			// Save the match with another version number.
+			if ((ignoreVersionCultureAndPublicKey == true) &&
+				(assemblyQualifiedName.EqualsType(typeInfo, true, true, true) == true)) {
+				return typeInfo.AsType();
+			}
+		}
+
+		// No match found.
+		return null;
+	} // GetTypeWithoutCache
+	#endregion
+
+	#region All methods
+	//------------------------------------------------------------------------------------------------------------------
+	// All methods.
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Gets an enumerator with all types from the specified assembly.
+	/// </summary>
+	/// <param name="assembly">The assembly.</param>
+	/// <param name="throwExceptions">Throw exceptions (true).</param>
+	/// <returns>The enumerator.</returns>
+	public static IEnumerable<TypeInfo> GetAllAssemblyTypes(Assembly assembly, Boolean throwExceptions = true) {
+		if (throwExceptions == true) {
+			return assembly.DefinedTypes;
+		} else {
+			// Catch exceptions like this:
+			// System.Reflection.ReflectionTypeLoadException: Unable to load one or more of the requested types.
+			// Could not load type 'SqlGuidCaster' from assembly 'Microsoft.Data.SqlClient, Version=5.0.0.0, Culture=neutral, PublicKeyToken=23ec7fc2d6eaa4a5' because it contains an object field at offset 0 that is incorrectly aligned or overlapped by a non-object field.
+			try {
+				return assembly.DefinedTypes;
+			} catch {
+				return Enumerable.Empty<TypeInfo>();
+			}
+		}
+	} // GetAllAssemblyTypes
+
+	/// <summary>
+	/// Gets an enumerator with all types from all available assemblies in the current application domain.
+	/// </summary>
+	/// <param name="throwExceptions">Throw exceptions (true).</param>
+	/// <returns>The enumerator.</returns>
+	public static IEnumerable<TypeInfo> GetAllDomainTypes(Boolean throwExceptions = true) {
+		// Iterate through all available assemblies in the current application domain.
+		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
+			foreach (TypeInfo typeInfo in RpcActivator.GetAllAssemblyTypes(assembly, throwExceptions)) {
+				if ((typeInfo.IsPublic == true) && ((typeInfo.IsClass == true) || (typeInfo.IsValueType == true))) {
+					yield return typeInfo;
+				}
+			}
+		}
+	} // GetAllDomainTypes
 	#endregion
 
 } // RpcActivator

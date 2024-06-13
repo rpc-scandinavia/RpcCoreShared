@@ -33,7 +33,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual("1.2.3", aqn.VersionString);
 		Assert.AreEqual("neutral", aqn.CultureString);
 		Assert.AreEqual("7cec85d7bea7798e", aqn.PublicKeyTokenString);
-//		Assert.IsNull(aqn.Type);
+		Assert.AreEqual(obj.GetType(), aqn.Type);
 
 		// Assert Assembly Qualified Name from string with missing optional parts.
 		aqn = new RpcAssemblyQualifiedName("System.Guid, System.Private.CoreLib, Version=1.2.3, Culture=neutral");
@@ -43,7 +43,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual("1.2.3", aqn.VersionString);
 		Assert.AreEqual("neutral", aqn.CultureString);
 		Assert.AreEqual(String.Empty, aqn.PublicKeyTokenString);
-		Assert.IsNull(aqn.Type);
+		Assert.AreEqual(obj.GetType(), aqn.Type);
 
 		// Assert Assembly Qualified Name from string with missing optional parts.
 		aqn = new RpcAssemblyQualifiedName("System.Guid, System.Private.CoreLib, Version=1.2.3");
@@ -53,7 +53,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual("1.2.3", aqn.VersionString);
 		Assert.AreEqual(String.Empty, aqn.CultureString);
 		Assert.AreEqual(String.Empty, aqn.PublicKeyTokenString);
-		Assert.IsNull(aqn.Type);
+		Assert.AreEqual(obj.GetType(), aqn.Type);
 
 		// Assert Assembly Qualified Name from string with missing optional parts.
 		aqn = new RpcAssemblyQualifiedName("System.Guid, System.Private.CoreLib");
@@ -63,7 +63,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(String.Empty, aqn.VersionString);
 		Assert.AreEqual(String.Empty, aqn.CultureString);
 		Assert.AreEqual(String.Empty, aqn.PublicKeyTokenString);
-		Assert.IsNull(aqn.Type);
+		Assert.AreEqual(obj.GetType(), aqn.Type);
 
 		// Assert Assembly Qualified Name from string with missing assembly name.
 		aqn = new RpcAssemblyQualifiedName("System.Guid");
@@ -73,7 +73,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(String.Empty, aqn.VersionString);
 		Assert.AreEqual(String.Empty, aqn.CultureString);
 		Assert.AreEqual(String.Empty, aqn.PublicKeyTokenString);
-		Assert.IsNull(aqn.Type);
+		Assert.AreEqual(obj.GetType(), aqn.Type);
 
 		// Assert Assembly Qualified Name from empty string.
 		aqn = new RpcAssemblyQualifiedName("");
@@ -85,11 +85,12 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(String.Empty, aqn.PublicKeyTokenString);
 		Assert.AreEqual(null, aqn.Type);
 		Assert.AreEqual(true, aqn.IsEmpty);
+
 	} // TestAssemblyQualifiedNameWithNormalType
 
 	[TestMethod]
 	public void TestAssemblyQualifiedNameWithArrayType() {
-		// Assert Assembly Qualified Name from one dimmentionel array.
+		// Assert Assembly Qualified Name from a one dimensional array.
 		String[] obj1 = new String[0];
 		RpcAssemblyQualifiedName aqn = new RpcAssemblyQualifiedName(obj1);
 
@@ -103,7 +104,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(false, aqn.IsGeneric);
 		Assert.AreEqual(obj1.GetType(), aqn.Type);
 
-		// Assert Assembly Qualified Name from two dimmentionel array.
+		// Assert Assembly Qualified Name from a two dimensional array.
 		String[,] obj2 = new String[0, 0];
 		aqn = new RpcAssemblyQualifiedName(obj2);
 
@@ -117,7 +118,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(false, aqn.IsGeneric);
 		Assert.AreEqual(obj2.GetType(), aqn.Type);
 
-		// Assert Assembly Qualified Name from tree dimmentionel array.
+		// Assert Assembly Qualified Name from tree dimensional array.
 		String[,,] obj3 = new String[0, 1, 2];
 		aqn = new RpcAssemblyQualifiedName(obj3);
 
@@ -130,6 +131,7 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(3, aqn.ArrayDimentions);
 		Assert.AreEqual(false, aqn.IsGeneric);
 		Assert.AreEqual(obj3.GetType(), aqn.Type);
+
 	} // TestAssemblyQualifiedNameWithArrayType
 
 	[TestMethod]
@@ -181,6 +183,28 @@ public class RpcAssemblyQualifiedNameTests {
 		Assert.AreEqual(obj2.GetType(), aqn.Type);
 
 	} // TestAssemblyQualifiedNameWithGenericType
+
+	[TestMethod]
+	public void TestAssemblyQualifiedNameWithArrayOfGenericType() {
+		// Assert Assembly Qualified Name from a one dimensional array of generic lists.
+		// System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]][], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e
+		List<String>[] obj1 = new List<String>[0];
+		String obj2 = String.Empty;
+		RpcAssemblyQualifiedName aqn = new RpcAssemblyQualifiedName(obj1);
+
+		Assert.AreEqual("System.Collections.Generic.List", aqn.TypeString);
+		Assert.AreEqual("System.Private.CoreLib", aqn.AssemblyString);
+		Assert.AreEqual("8.0.0.0", aqn.VersionString);
+		Assert.AreEqual("neutral", aqn.CultureString);
+		Assert.AreEqual("7cec85d7bea7798e", aqn.PublicKeyTokenString);
+		Assert.AreEqual(true, aqn.IsArray);
+		Assert.AreEqual(1, aqn.ArrayDimentions);
+		Assert.AreEqual(true, aqn.IsGeneric);
+		Assert.AreEqual(1, aqn.GenericTypeArgumentCount);
+		Assert.AreEqual(obj2.GetType(), aqn.GenericTypeArguments[0].Type);
+		Assert.AreEqual(obj1.GetType(), aqn.Type);
+
+	} // TestAssemblyQualifiedNameWithArrayOfGenericType
 
 	[TestMethod]
 	public void TestAssemblyQualifiedNameEquals() {
