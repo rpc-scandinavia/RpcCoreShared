@@ -6,22 +6,22 @@ RPC Core Shared contains interfaces and common classes used in most applications
 
 ## Extensions
 RPC Core Extensions is my static methods, for extending all sort of types.
-Currently there are extension methods for:
+Currently, there are extension methods for:
 
 * Comparer (chain comparer with `then`, and reverse with `reverse`) 
-* Memory<Char>
-* Span<Char>
-* String
-* String (hash and validate)
-* StringBuilder
-* Type
+* Memory<Char> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/Char/)
+* Span<Char> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/Char/)
+* String [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/String/)
+* String (hash and validate) [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/Hash.cs)
+* StringBuilder [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/Miscelenious/StringBuilder.cs)
+* Type [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/Type/Type.cs)
 
 Note that I have a lot of old extension methods, and I will add those not available in Linq.
 
 ## RpcAssemblyQualifiedName [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/AssemblyQualifiedName.cs)
 This is a Assembly Qualified Name parser. It uses `ReadOnlyMemory<Char>` and can compare names ignoring the assembly version, assembly culture and/or the assembly public key token.
 
-## RpcDictionaryList [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/RpcDictionaryList.cs)
+## RpcDictionaryList [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/DictionaryList.cs)
 This is a dictionary, where the value is a list of values, basically a `IDictionary<TKey, List<TValue>>`.
 
 ## RpcSimpleLocalCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and RpcSimpleStaticCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
@@ -33,5 +33,4 @@ A `SemaphoreSlim` is used for thread safety. The difference between the two, are
 other is a static class, which allow access to the cache from everywhere within the application. 
 
 ## Triple [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Structs/Triple.cs)
-
 RPC Triple is a struct with three states, `True`, `False` and `Unknown`.
