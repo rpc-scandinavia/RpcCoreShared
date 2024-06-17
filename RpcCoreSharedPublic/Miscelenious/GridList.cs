@@ -16,7 +16,7 @@ public delegate void RpcGridListValueEventHandler<T>(RpcGridList<T> sender, T ol
 //	RpcGridList.
 //----------------------------------------------------------------------------------------------------------------------
 /// <summary>
-/// Defines a two dimensional generic list.
+/// Defines a two-dimensional generic list.
 /// </summary>
 /// <typeparam name="T">The type of the list.</typeparam>
 public class RpcGridList<T> {

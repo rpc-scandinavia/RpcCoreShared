@@ -21,10 +21,21 @@ Note that I have a lot of old extension methods, and I will add those not availa
 ## RpcAssemblyQualifiedName [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/AssemblyQualifiedName.cs)
 This is a Assembly Qualified Name parser. It uses `ReadOnlyMemory<Char>` and can compare names ignoring the assembly version, assembly culture and/or the assembly public key token.
 
-## RpcDictionaryList [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/DictionaryList.cs)
+## RpcDictionaryList<TKey, TValue> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/DictionaryList.cs)
 This is a dictionary, where the value is a list of values, basically a `IDictionary<TKey, List<TValue>>`.
 
-## RpcSimpleLocalCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and RpcSimpleStaticCache [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
+## RpcGridList<T> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/GridList.cs)
+This is a two-dimensional list, with rows and columns.
+The items are stored in a `List<T>`, and the position in the grid is calculated.
+
+## RpcGuid [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/Guid.cs)
+This can generate custom GUIDs, where the different parts are used to store integer values in human-readable form (not hexadecimal).
+There are 5 different parts in a GUID `AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE`, and this can store values in **A** and **E**.
+
+Value stored in **A** is called group identifier, and can store a number between 0 and 99.999.999.
+Value stored in **E** are called number identifier, and can store a number between 0 and 999.999.999.999.
+
+## RpcSimpleLocalCache<TKey, TValue> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and RpcSimpleStaticCache<TIsolation, TKey, TValue> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
 Simple in-memory cache, that store cached values in a dictionary. When the cache do not contain the requested value, 
 the provider delegate specified in the constructor is called to get the requested value, which is added to the cache 
 and returned.
