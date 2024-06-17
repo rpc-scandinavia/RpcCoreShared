@@ -8,7 +8,7 @@ RPC Core Shared contains interfaces and common classes used in most applications
 RPC Core Extensions is my static methods, for extending all sort of types.
 Currently, there are extension methods for:
 
-* Comparer (chain comparer with `then` [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/ComparerChainNode.cs), and reverse with `reverse` [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/ComparerReverse.cs)) 
+* Comparer [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/ComparerExtensions.cs) (chain comparer with `then` [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/ComparerChainNode.cs), and reverse with `reverse` [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/ComparerReverse.cs)) 
 * Memory<Char> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/Char%20(Contiguous%20region%20of%20memory)/)
 * Span<Char> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/Char%20(Contiguous%20region%20of%20memory)/)
 * String [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Extensions/String/)
