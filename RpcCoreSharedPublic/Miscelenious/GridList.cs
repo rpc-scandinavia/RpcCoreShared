@@ -41,6 +41,7 @@ public class RpcGridList<T> {
 	private event RpcGridListEventHandler<T> eventValuesReset = null;
 
 	private List<T> elements;
+	private Int32 rows;												// Not used in calculations, just used when empty.
 	private Int32 columns;
 	private Boolean distinct;
 
@@ -54,6 +55,7 @@ public class RpcGridList<T> {
 	public RpcGridList() {
 		this.elements = new List<T>();
 		this.elements.Add(default(T));
+		this.rows = 1;
 		this.columns = 1;
 		this.distinct = false;
 	} // RpcGridList
@@ -76,6 +78,7 @@ public class RpcGridList<T> {
 		for (Int32 index = 0; index < rowCount * columnCount; index++) {
 			this.elements.Add(default(T));
 		}
+		this.rows = rowCount;
 		this.columns = columnCount;
 		this.distinct = false;
 	} // RpcGridList
@@ -86,6 +89,7 @@ public class RpcGridList<T> {
 	/// <param name="gridList">The source grid list.</param>
 	public RpcGridList(RpcGridList<T> gridList) {
 		this.elements = new List<T>(gridList.elements);
+		this.rows = gridList.rows;
 		this.columns = gridList.columns;
 		this.distinct = gridList.distinct;
 	} // RpcGridList
@@ -310,7 +314,7 @@ public class RpcGridList<T> {
 			if (this.elements.Count > 0) {
 				return this.elements.Count / this.columns;
 			} else {
-				return 0;
+				return this.rows;
 			}
 		}
 	} // RowCount
@@ -401,6 +405,7 @@ public class RpcGridList<T> {
 	/// </summary>
 	public void Clear() {
 		this.elements.Clear();
+		this.rows = 0;
 		this.columns = 0;
 
 		// Raise the event.
@@ -471,6 +476,9 @@ public class RpcGridList<T> {
 			this.elements.Insert(rowIndex * this.columns + index, default(T));
 		}
 
+		// Increase the row count.
+		this.rows++;
+
 		// Raise the event.
 		this.DoRowAdded(rowIndex);
 	} // InsertRow
@@ -488,14 +496,13 @@ public class RpcGridList<T> {
 		if (columnIndex > this.columns) {
 			throw new IndexOutOfRangeException($"The column index {columnIndex} is greater then the column count {this.columns}.");
 		}
+		if (this.RowCount == 0) {
+			throw new IndexOutOfRangeException(String.Format("Unable to insert columns, when there is zero rows.", columnIndex));
+		}
 
 		// Insert the column items at the correct position.
-		if (this.columns == 0) {
-			this.elements.Insert(0, default(T));
-		} else {
-			for (Int32 index = columnIndex; index < this.elements.Count + 1; index = index + this.columns + 1) {
-				this.elements.Insert(index, default(T));
-			}
+		for (Int32 rowIndex = 0; rowIndex < this.rows; rowIndex++) {
+			this.elements.Insert((rowIndex * (this.columns + 1)) + columnIndex, default(T));
 		}
 
 		// Increase the column count.
@@ -518,11 +525,14 @@ public class RpcGridList<T> {
 			throw new IndexOutOfRangeException($"The row index {rowIndex} is greater then or equal to the row count {this.RowCount}.");
 		}
 
-		// Raise the event.
-		this.DoRowRemoved(rowIndex);
-
 		// Remove the row items at the correct position.
 		this.elements.RemoveRange(rowIndex * this.columns, this.columns);
+
+		// Decrease the row count.
+		this.rows--;
+
+		// Raise the event.
+		this.DoRowRemoved(rowIndex);
 	} // RemoveRow
 
 	/// <summary>

@@ -201,7 +201,7 @@ public static class RpcGuid {
 		} else {
 			return defaultValue;
 		}
-	} // GetNumberId
+	} // GetNumberId64
 	#endregion
 
 } // RpcGuid

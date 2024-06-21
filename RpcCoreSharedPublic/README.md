@@ -33,7 +33,7 @@ This can generate custom GUIDs, where the different parts are used to store inte
 There are 5 different parts in a GUID `AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE`, and this can store values in **A** and **E**.
 
 Value stored in **A** is called group identifier, and can store a number between 0 and 99.999.999.
-Value stored in **E** are called number identifier, and can store a number between 0 and 999.999.999.999.
+Value stored in **E** is called number identifier, and can store a number between 0 and 999.999.999.999.
 
 ## RpcSimpleLocalCache<TKey, TValue> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleLocalCache.cs) and RpcSimpleStaticCache<TIsolation, TKey, TValue> [🔗](https://github.com/rpc-scandinavia/RpcCoreShared/blob/master/RpcCoreSharedPublic/Miscelenious/SimpleStaticCache.cs)
 Simple in-memory cache, that store cached values in a dictionary. When the cache do not contain the requested value, 
