@@ -10,7 +10,7 @@ namespace RpcScandinavia.Core.Shared;
 /// This class have constructors and operators for <see cref="System.Boolean"/>, <see cref="System.Byte"/>,
 /// <see cref="System.Int32"/> and <see cref="System.String"/>.
 /// </summary>
-public struct Triple : IParsable<Triple> {
+public readonly struct Triple : IParsable<Triple>, IEquatable<Triple> {
 	private	readonly Byte value;
 
 	#region Static new properties
@@ -216,9 +216,9 @@ public struct Triple : IParsable<Triple> {
 	/// <returns>True if the X and Y values are equal.</returns>
 	public static Boolean operator ==(Triple x, Boolean y) {
 		if (y == false) {
-			return x.value == 0;
+			return (x.value == 0);
 		} else {
-			return x.value == 1;
+			return (x.value == 1);
 		}
 	} // ==
 
@@ -229,7 +229,7 @@ public struct Triple : IParsable<Triple> {
 	/// <param name="y">The Int32 value.</param>
 	/// <returns>True if the X and Y values are equal.</returns>
 	public static Boolean operator ==(Triple x, Int32 y) {
-		return x.value == y;
+		return (x.value == y);
 	} // ==
 
 	/// <summary>
@@ -239,7 +239,7 @@ public struct Triple : IParsable<Triple> {
 	/// <param name="y">The String value.</param>
 	/// <returns>True if the X and Y values are equal.</returns>
 	public static Boolean operator ==(Triple x, String y) {
-		return (Triple.Parse(y, null).value == x.value);
+		return (Triple.Parse(y.NotNull(), null).value == x.value);
 	} // ==
 
 	/// <summary>
@@ -249,7 +249,7 @@ public struct Triple : IParsable<Triple> {
 	/// <param name="y">The second Triple value.</param>
 	/// <returns>True if the X and Y values are equal.</returns>
 	public static Boolean operator ==(Triple x, Triple y) {
-		return x.value == y.value;
+		return (x.value == y.value);
 	} // ==
 
 	/// <summary>
@@ -456,6 +456,20 @@ public struct Triple : IParsable<Triple> {
 		result = new Triple(value);
 		return true;
 	} // TryParse
+	#endregion
+
+	#region IEquatable
+	//------------------------------------------------------------------------------------------------------------------
+	// IParsable.
+	//------------------------------------------------------------------------------------------------------------------
+	/// <summary>
+	/// Evaluates if a Triple value is equal to another Triple value.
+	/// </summary>
+	/// <param name="other">The Triple to compare with.</param>
+	/// <returns>True if the Triple value equals the other Triple value.</returns>
+	public Boolean Equals(Triple other) {
+		return (this.value == other.value);
+	} // Equals
 	#endregion
 
 } // Triple

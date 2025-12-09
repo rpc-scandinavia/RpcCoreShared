@@ -427,10 +427,10 @@ public class RpcAssemblyQualifiedName {
 			(this.isArray == assemblyQualifiedName.isArray) &&
 			(this.isGeneric == assemblyQualifiedName.isGeneric) &&
 			(this.genericTypeArguments.SequenceEqual(assemblyQualifiedName.genericTypeArguments, new RpcAssemblyQualifiedNameEqualityComparer(ignoreVersion, ignoreCulture, ignorePublicKey)) == true) &&
-			(this.assemblyNamePart.Span.SequenceEqual(assemblyQualifiedName.assemblyNamePart.Span) == true) &&
-			((ignoreVersion == true) || (this.assemblyVersionPart.Span.SequenceEqual(assemblyQualifiedName.assemblyVersionPart.Span) == true)) &&
-			((ignoreCulture == true) || (this.assemblyCulturePart.Span.SequenceEqual(assemblyQualifiedName.assemblyCulturePart.Span) == true)) &&
-			((ignorePublicKey == true) || (this.assemblyPublicKeyPart.Span.SequenceEqual(assemblyQualifiedName.assemblyPublicKeyPart.Span) == true))
+			((this.assemblyNamePart.Length == 0) || (this.assemblyNamePart.Span.SequenceEqual(assemblyQualifiedName.assemblyNamePart.Span) == true)) &&
+			((ignoreVersion == true) || (this.assemblyVersionPart.Length == 0) || (this.assemblyVersionPart.Span.SequenceEqual(assemblyQualifiedName.assemblyVersionPart.Span) == true)) &&
+			((ignoreCulture == true) || (this.assemblyCulturePart.Length == 0) || (this.assemblyCulturePart.Span.SequenceEqual(assemblyQualifiedName.assemblyCulturePart.Span) == true)) &&
+			((ignorePublicKey == true) || (this.assemblyPublicKeyPart.Length == 0) || (this.assemblyPublicKeyPart.Span.SequenceEqual(assemblyQualifiedName.assemblyPublicKeyPart.Span) == true))
 		);
 	} // EqualsType
 	#endregion
@@ -603,26 +603,33 @@ public class RpcAssemblyQualifiedName {
 	/// Tries to get the type from either the <see cref="System.Type.GetType"/> method or by iterating all assemblies.
 	/// </summary>
 	private Type GetType(String typeName) {
-		// Get the type from the Activator.
-		Type type = Type.GetType(typeName, false);
-		if (type != null) {
-			return type;
-		}
-
-		// Iterate all assemblies in the AppDomain, and see if a type matches.
-		foreach (TypeInfo typeInfo in RpcActivator.GetAllDomainTypes(false)) {
-			if (typeInfo.AssemblyQualifiedName.StartsWith(typeName) == true) {
-				RpcAssemblyQualifiedName typeA = new RpcAssemblyQualifiedName(typeName);
-				RpcAssemblyQualifiedName typeB = new RpcAssemblyQualifiedName(typeInfo);
-				//if (typeA.typePart.Span.SequenceEqual(typeB.typePart.Span) == true) {
-				if (typeA.EqualsType(typeB, true, true, true) == true) {
-					return typeInfo.AsType();
+		// Get the type.
+		// Use the same simple static cache as RpcActivator.
+		RpcSimpleStaticCache<String, String, Type> typeNameCache = new RpcSimpleStaticCache<String, String, Type>(
+			RpcActivator.CacheIsolation,
+			RpcSimpleCacheNullValues.DenyNullValuesAndReturnDefault,
+			(typeName) => {
+				// Get the type from the Activator.
+				Type type = Type.GetType(typeName, false);
+				if (type != null) {
+					return type;
 				}
-			}
-		}
 
-		// The type was not found.
-		return null;
+				// Iterate all assemblies in the AppDomain, and see if a type matches.
+				RpcAssemblyQualifiedName typeA = new RpcAssemblyQualifiedName(typeName);
+				foreach (TypeInfo typeInfo in RpcActivator.GetAllDomainTypes(false)) {
+					RpcAssemblyQualifiedName typeB = new RpcAssemblyQualifiedName(typeInfo);
+					if (typeA.EqualsType(typeB, true, true, true) == true) {
+						return typeInfo.AsType();
+					}
+				}
+
+				// The type was not found.
+				return null;
+			}
+		);
+
+		return typeNameCache.GetValue(typeName);
 	} // GetType
 
 	/// <summary>

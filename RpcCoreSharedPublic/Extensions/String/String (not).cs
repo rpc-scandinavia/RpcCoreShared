@@ -1,5 +1,5 @@
-﻿namespace RpcScandinavia.Core.Shared;
-using System;
+﻿using System;
+namespace RpcScandinavia.Core.Shared;
 
 #region RpcCoreExtensions
 //----------------------------------------------------------------------------------------------------------------------
@@ -8,83 +8,84 @@ using System;
 /// <summary>
 /// This part of the class contains useful extension methods for the <see cref="System.String" /> class.
 /// </summary>
-public static partial class RpcCoreExtensions {
+public partial class RpcCoreExtensions {
 
-	#region NotNull
-	//------------------------------------------------------------------------------------------------------------------
-	// NotNull.
-	//------------------------------------------------------------------------------------------------------------------
-	/// <summary>
-	/// Gets the value or <see cref="System.String.Empty" /> if the value is null.
-	/// </summary>
-	/// <param name="value">The value to verify.</param>
-	/// <returns>The value or String.Empty if the value is null.</returns>
-	public static String NotNull(this String value) {
-		if (value == null) {
-			return String.Empty;
-		} else {
-			return value;
-		}
-	} // NotNull
+	extension (String value) {
 
-	/// <summary>
-	/// Gets the value or the default value if the value is null.
-	/// </summary>
-	/// <param name="value">The value to verify.</param>
-	/// <param name="defaultValue">The value to return when the value is null.</param>
-	/// <returns>The value or the default value if the value is null.</returns>
-	public static String NotNull(this String value, String defaultValue) {
-		if (value == null) {
-			return defaultValue;
-		} else {
-			return value;
-		}
-	} // NotNull
-	#endregion
-
-	#region NotNullOrEmpty
-	//------------------------------------------------------------------------------------------------------------------
-	// NotNullOrEmpty.
-	//------------------------------------------------------------------------------------------------------------------
-	/// <summary>
-	/// Gets the value or the default value if the value is either null ot empty.
-	/// </summary>
-	/// <param name="value">The value to verify.</param>
-	/// <param name="defaultValue">The value to return when the value is either null or empty.</param>
-	/// <returns>The value or the default value if the value is either null or empty.</returns>
-	public static String NotNullOrEmpty(this String value, String defaultValue) {
-		if ((value == null) || (value.Length == 0)) {
-			return defaultValue;
-		} else {
-			return value;
-		}
-	} // NotNullOrEmpty
-	#endregion
-
-	#region NotNullOrWhiteSpace
-	//------------------------------------------------------------------------------------------------------------------
-	// NotNullOrWhiteSpace.
-	//------------------------------------------------------------------------------------------------------------------
-	/// <summary>
-	/// Gets the value or the default value if the value is either null, empty or only contains white-space characters.
-	/// </summary>
-	/// <param name="value">The value to verify.</param>
-	/// <param name="defaultValue">The value to return when the value is either null, empty or only contains white-space characters.</param>
-	/// <returns>The value or the default value if the value is either null, empty or only contains white-space characters.</returns>
-	public static String NotNullOrWhiteSpace(this String value, String defaultValue) {
-		if (value == null) {
-			return defaultValue;
-		}
-
-		for(Int32 index = 0; index < value.Length; index++) {
-			if (Char.IsWhiteSpace(value[index]) == false) {
+		#region NotNull
+		//--------------------------------------------------------------------------------------------------------------
+		// NotNull.
+		//--------------------------------------------------------------------------------------------------------------
+		/// <summary>
+		/// Gets the <see cref="System.String" /> or <see cref="System.String.Empty" /> if the string is null.
+		/// </summary>
+		/// <returns>The string or String.Empty if the string is null.</returns>
+		public String NotNull() {
+			if (value == null) {
+				return String.Empty;
+			} else {
 				return value;
 			}
-		}
+		} // NotNull
 
-		return defaultValue;
-	} // NotNullOrWhiteSpace
-	#endregion
+		/// <summary>
+		/// Gets the <see cref="System.String" /> or the default string if the string is null.
+		/// </summary>
+		/// <param name="defaultValue">The string to return when the string is null.</param>
+		/// <returns>The string or the default string if the string is null.</returns>
+		public String NotNull(String defaultValue) {
+			if (value == null) {
+				return defaultValue;
+			} else {
+				return value;
+			}
+		} // NotNull
+		#endregion
+
+		#region NotNullOrEmpty
+		//--------------------------------------------------------------------------------------------------------------
+		// NotNullOrEmpty.
+		//--------------------------------------------------------------------------------------------------------------
+		/// <summary>
+		/// Gets the <see cref="System.String" /> or the default string if the string is either null or empty.
+		/// </summary>
+		/// <param name="defaultValue">The string to return when the string is either null or empty.</param>
+		/// <returns>The string or the default string if the string is either null or empty.</returns>
+		public String NotNullOrEmpty(String defaultValue) {
+			if ((value == null) || (value.Length == 0)) {
+				return defaultValue;
+			} else {
+				return value;
+			}
+		} // NotNullOrEmpty
+		#endregion
+
+		#region NotNullOrWhiteSpace
+		//--------------------------------------------------------------------------------------------------------------
+		// NotNullOrWhiteSpace.
+		//--------------------------------------------------------------------------------------------------------------
+		/// <summary>
+		/// Gets the <see cref="System.String" /> or the default string if the <see cref="System.String" /> is either
+		/// null, empty or only contains white-space characters.
+		/// </summary>
+		/// <param name="defaultValue">The string to return when the string is either null, empty or only contains white-space characters.</param>
+		/// <returns>The string or the default string if the string is either null, empty or only contains white-space characters.</returns>
+		public String NotNullOrWhiteSpace(String defaultValue) {
+			if (value == null) {
+				return defaultValue;
+			}
+
+			for (Int32 index = 0; index < value.Length; index++) {
+				if (Char.IsWhiteSpace(value[index]) == false) {
+					return value;
+				}
+			}
+
+			return defaultValue;
+		} // NotNullOrWhiteSpace
+		#endregion
+
+	}
 
 } // RpcCoreExtensions
 #endregion

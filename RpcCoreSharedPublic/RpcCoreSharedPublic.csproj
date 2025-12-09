@@ -10,6 +10,21 @@
         <Product>RPC Core Shared</Product>
         <Description>RPC Core Shared contains interfaces and common classes used in most applications from RPC Scandinavia.</Description>
         <Copyright>Copyright © RPC Scandinavia 2000 - $([System.DateTime]::UtcNow.ToString(yyyy))</Copyright>
+
+        <!-- NuGet package. -->
+		<PackageId>RpcScandinavia.Core.Shared</PackageId>
+		<Version>$(VersionSuffix)</Version>
+		<Authors>René Paw Christensen</Authors>
+		<Company>RPC Scandinavia</Company>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/rpc-scandinavia/RpcCoreShared/</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
     </PropertyGroup>
+
+	<ItemGroup>
+        <!-- NuGet package. -->
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 </Project>

@@ -147,7 +147,7 @@ public static class RpcActivator {
 			}
 
 			// Partial match.
-			// Save the match with another version number.
+			// Return the match with another version number.
 			if ((ignoreVersionCultureAndPublicKey == true) &&
 				(assemblyQualifiedName.EqualsType(typeInfo, true, true, true) == true)) {
 				return typeInfo.AsType();

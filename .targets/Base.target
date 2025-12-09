@@ -19,9 +19,12 @@
 
 	<PropertyGroup>
 		<!-- Disable common warnings. -->
-		<NoWarn>$(NoWarn);MSB4011</NoWarn>					<!-- The target cannot be imported again. -->
-		<NoWarn>$(NoWarn);CS1998</NoWarn>					<!-- This async method lacks 'await'. -->
-		<NoWarn>$(NoWarn);CS8632</NoWarn>					<!-- The annotation for nullable reference types should only be used in code within a ‘#nullable’ annotations context. -->
+		<NoWarn>$(NoWarn);MSB4011</NoWarn>																				<!-- The target cannot be imported again. -->
+		<NoWarn>$(NoWarn);CS0169</NoWarn>																				<!-- The field 'ProgramThreadInstance.threadCollectionId' is never used. -->
+		<NoWarn>$(NoWarn);CS0649</NoWarn>																				<!-- warning : Field 'RpcVariableFile.tempFileNames' is never assigned to, and will always have its default value null. -->
+		<NoWarn>$(NoWarn);CS1998</NoWarn>																				<!-- This async method lacks 'await'. -->
+		<NoWarn>$(NoWarn);CS8632</NoWarn>																				<!-- The annotation for nullable reference types should only be used in code within a ‘#nullable’ annotations context. -->
+		<NoWarn>$(NoWarn);NU1504</NoWarn>																				<!-- Duplicate 'PackageReference' items found. Remove the duplicate items or use the Update functionality to ensure a consistent restore behavior. -->
 
 		<!-- Copy package assemblies to output directory. -->
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -35,7 +38,7 @@
 		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
 		<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
 		-->
-		<VersionSuffix>8.0.$([System.DateTime]::UtcNow.ToString(yy))$([System.DateTime]::UtcNow.DayOfYear.ToString(000))</VersionSuffix>
+		<VersionSuffix>9.0.$([System.DateTime]::UtcNow.ToString(yy))$([System.DateTime]::UtcNow.DayOfYear.ToString(000))</VersionSuffix>
 		<Version>$(VersionSuffix)</Version>
 		<FileVersion>$(VersionSuffix)</FileVersion>
 		<AssemblyVersion>$(VersionSuffix)</AssemblyVersion>

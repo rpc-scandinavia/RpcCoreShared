@@ -2,7 +2,7 @@ using System;
 namespace RpcScandinavia.Core.Shared;
 
 /// <summary>
-/// Date and time standard format specifier constants, for the <see cref="System.DateTime.ToString"> method.
+/// Date and time standard format specifier constants, for the <see cref="System.DateTime.ToString" /> method.
 /// </summary>
 public static class RpcStandardDateTimeFormat {
 
